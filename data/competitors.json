@@ -1,0 +1,107 @@
+[
+  {
+    "competitor": "Acme Cloud",
+    "date": "2026-07-01",
+    "category": "product",
+    "event": "Launched an AI-powered analytics assistant",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Acme Cloud",
+    "date": "2026-07-07",
+    "category": "product",
+    "event": "Introduced automated anomaly detection for analytics workflows",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Acme Cloud",
+    "date": "2026-07-12",
+    "category": "partnership",
+    "event": "Introduced a native CRM data connector",
+    "source": "Synthetic partnership announcement"
+  },
+  {
+    "competitor": "Acme Cloud",
+    "date": "2026-07-15",
+    "category": "enterprise",
+    "event": "Introduced an enterprise security package with advanced access controls",
+    "source": "Synthetic enterprise announcement"
+  },
+  {
+    "competitor": "Acme Cloud",
+    "date": "2026-07-22",
+    "category": "enterprise",
+    "event": "Added SSO and role-based administration",
+    "source": "Synthetic enterprise announcement"
+  },
+  {
+    "competitor": "Acme Cloud",
+    "date": "2026-07-29",
+    "category": "hiring",
+    "event": "Opened multiple enterprise account executive positions",
+    "source": "Synthetic hiring update"
+  },
+  {
+    "competitor": "Acme Cloud",
+    "date": "2026-08-05",
+    "category": "messaging",
+    "event": "Shifted messaging toward AI-first analytics",
+    "source": "Synthetic messaging update"
+  },
+  {
+    "competitor": "Acme Cloud",
+    "date": "2026-08-12",
+    "category": "product",
+    "event": "Introduced AI-generated executive reports",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Acme Cloud",
+    "date": "2026-08-18",
+    "category": "messaging",
+    "event": "Emphasized faster time-to-insight and automated analysis",
+    "source": "Synthetic messaging update"
+  },
+  {
+    "competitor": "Acme Cloud",
+    "date": "2026-08-22",
+    "category": "pricing",
+    "event": "Introduced usage-based pricing for high-volume customers",
+    "source": "Synthetic pricing update"
+  },
+  {
+    "competitor": "Acme Cloud",
+    "date": "2026-09-03",
+    "category": "packaging",
+    "event": "Bundled advanced AI analytics into a higher-tier enterprise package",
+    "source": "Synthetic packaging update"
+  },
+  {
+    "competitor": "Acme Cloud",
+    "date": "2026-09-10",
+    "category": "partnership",
+    "event": "Added integration with external business data sources",
+    "source": "Synthetic partnership announcement"
+  },
+  {
+    "competitor": "Acme Cloud",
+    "date": "2026-09-18",
+    "category": "enterprise",
+    "event": "Added additional audit and administration controls",
+    "source": "Synthetic enterprise announcement"
+  },
+  {
+    "competitor": "Acme Cloud",
+    "date": "2026-09-24",
+    "category": "hiring",
+    "event": "Opened customer success roles focused on larger enterprise accounts",
+    "source": "Synthetic hiring update"
+  },
+  {
+    "competitor": "Acme Cloud",
+    "date": "2026-09-27",
+    "category": "pricing",
+    "event": "Reduced the Pro plan price from $49 to $39 per month",
+    "source": "Synthetic pricing update"
+  }
+]
