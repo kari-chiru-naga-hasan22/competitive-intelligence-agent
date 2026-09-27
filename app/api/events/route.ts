@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateGeminiContent } from "@/lib/gemini/client";
-import { getHindsightClient } from "@/lib/hindsight";
+import { getHindsightClient, buildMemoryContent } from "@/lib/hindsight";
 
 const BANK_ID = "competitive-intelligence";
 
@@ -86,15 +86,14 @@ Do not invent facts that are not present in the input.
       // Continue without failing the request.
     }
 
-    // 9. Build the memory that will be stored
-    const memoryContent = [
-      `Competitor: ${intelligence.competitor}`,
-      `Category: ${intelligence.category}`,
-      `Event: ${intelligence.event}`,
-      `Strategic signal: ${intelligence.strategic_signal}`,
-      `Source: ${intelligence.source}`,
-      `Date: ${intelligence.date}`,
-    ].join("\n");
+    // 9. Build canonical memory content (Issue 5 fix)
+    const memoryContent = buildMemoryContent({
+      competitor: intelligence.competitor,
+      category: intelligence.category,
+      event: intelligence.event,
+      source: intelligence.source,
+      date: intelligence.date,
+    });
 
     // 10. Store the event in Hindsight
     await hindsight.retain(BANK_ID, memoryContent, {

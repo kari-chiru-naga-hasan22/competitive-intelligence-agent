@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getHindsightClient } from "@/lib/hindsight";
+import { getHindsightClient, buildMemoryContent } from "@/lib/hindsight";
 
 const BANK_ID = "competitive-intelligence";
 
@@ -130,13 +130,14 @@ export async function POST() {
     const results = [];
 
     for (const item of EVENTS) {
-      const memoryContent = [
-        `Competitor: ${item.competitor}`,
-        `Category: ${item.category}`,
-        `Event: ${item.event}`,
-        `Source: ${item.source}`,
-        `Date: ${item.date}`,
-      ].join("\n");
+      // Issue 5 fix: Canonical memory content helper
+      const memoryContent = buildMemoryContent({
+        competitor: item.competitor,
+        category: item.category,
+        event: item.event,
+        source: item.source,
+        date: item.date,
+      });
 
       await hindsight.retain(BANK_ID, memoryContent, {
         context: "competitive-intelligence-seed",
