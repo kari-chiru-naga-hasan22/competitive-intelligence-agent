@@ -103,5 +103,215 @@
     "category": "pricing",
     "event": "Reduced the Pro plan price from $49 to $39 per month",
     "source": "Synthetic pricing update"
+  },
+  {
+    "competitor": "Nimbus Analytics",
+    "date": "2026-07-03",
+    "category": "product",
+    "event": "Released automated schema detection and data pipeline health monitoring",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Nimbus Analytics",
+    "date": "2026-07-09",
+    "category": "product",
+    "event": "Added automated anomaly detection with threshold alerts for data pipelines",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Nimbus Analytics",
+    "date": "2026-07-16",
+    "category": "enterprise",
+    "event": "Published verifiable data lineage and model audit logging tools",
+    "source": "Synthetic enterprise announcement"
+  },
+  {
+    "competitor": "Nimbus Analytics",
+    "date": "2026-07-21",
+    "category": "packaging",
+    "event": "Expanded enterprise tier to include dedicated customer success architects",
+    "source": "Synthetic packaging update"
+  },
+  {
+    "competitor": "Nimbus Analytics",
+    "date": "2026-07-28",
+    "category": "hiring",
+    "event": "Recruited principal engineers for AI safety and data governance infrastructure",
+    "source": "Synthetic hiring update"
+  },
+  {
+    "competitor": "Nimbus Analytics",
+    "date": "2026-08-04",
+    "category": "messaging",
+    "event": "Realigned marketing tagline around trusted enterprise AI and compliance-ready insights",
+    "source": "Synthetic messaging update"
+  },
+  {
+    "competitor": "Nimbus Analytics",
+    "date": "2026-08-11",
+    "category": "product",
+    "event": "Introduced natural language query interface for board-ready executive summaries",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Nimbus Analytics",
+    "date": "2026-08-17",
+    "category": "partnership",
+    "event": "Announced ecosystem partnership with Snowflake and Databricks governance catalogs",
+    "source": "Synthetic partnership announcement"
+  },
+  {
+    "competitor": "Nimbus Analytics",
+    "date": "2026-08-24",
+    "category": "enterprise",
+    "event": "Achieved HIPAA and SOC2 Type II compliance validation across all inference services",
+    "source": "Synthetic enterprise announcement"
+  },
+  {
+    "competitor": "Nimbus Analytics",
+    "date": "2026-08-31",
+    "category": "messaging",
+    "event": "Published benchmark paper emphasizing hallucination prevention in enterprise analytics",
+    "source": "Synthetic messaging update"
+  },
+  {
+    "competitor": "Nimbus Analytics",
+    "date": "2026-09-06",
+    "category": "product",
+    "event": "Launched multi-cloud data synchronization engine for hybrid deployments",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Nimbus Analytics",
+    "date": "2026-09-13",
+    "category": "partnership",
+    "event": "Partnered with global systems integrators to offer enterprise migration packages",
+    "source": "Synthetic partnership announcement"
+  },
+  {
+    "competitor": "Nimbus Analytics",
+    "date": "2026-09-17",
+    "category": "pricing",
+    "event": "Introduced volume discounting schedules for enterprise multi-year contracts",
+    "source": "Synthetic pricing update"
+  },
+  {
+    "competitor": "Nimbus Analytics",
+    "date": "2026-09-22",
+    "category": "hiring",
+    "event": "Opened regional customer success team lead positions across EMEA and APAC",
+    "source": "Synthetic hiring update"
+  },
+  {
+    "competitor": "Nimbus Analytics",
+    "date": "2026-09-26",
+    "category": "packaging",
+    "event": "Unveiled Sovereign Cloud deployment option for regulated industry clients",
+    "source": "Synthetic packaging update"
+  },
+  {
+    "competitor": "Vertex Data",
+    "date": "2026-07-05",
+    "category": "product",
+    "event": "Launched self-service drag-and-drop analytics canvas for non-technical teams",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Vertex Data",
+    "date": "2026-07-10",
+    "category": "pricing",
+    "event": "Introduced a freemium starter tier supporting up to 5 team members",
+    "source": "Synthetic pricing update"
+  },
+  {
+    "competitor": "Vertex Data",
+    "date": "2026-07-17",
+    "category": "messaging",
+    "event": "Focused promotional campaigns on zero-setup onboarding and fast time-to-value",
+    "source": "Synthetic messaging update"
+  },
+  {
+    "competitor": "Vertex Data",
+    "date": "2026-07-24",
+    "category": "product",
+    "event": "Released one-click template library for ecommerce and retail conversion metrics",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Vertex Data",
+    "date": "2026-07-31",
+    "category": "product",
+    "event": "Added pre-built financial KPI dashboards and automated monthly variance reports",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Vertex Data",
+    "date": "2026-08-07",
+    "category": "pricing",
+    "event": "Lowered initial annual subscription fees by 25 percent for early-stage startups",
+    "source": "Synthetic pricing update"
+  },
+  {
+    "competitor": "Vertex Data",
+    "date": "2026-08-14",
+    "category": "messaging",
+    "event": "Published customer case studies highlighting 10-minute deployment without dedicated data engineers",
+    "source": "Synthetic messaging update"
+  },
+  {
+    "competitor": "Vertex Data",
+    "date": "2026-08-20",
+    "category": "partnership",
+    "event": "Partnered with Shopify and Stripe for direct integration with retail store workflows",
+    "source": "Synthetic partnership announcement"
+  },
+  {
+    "competitor": "Vertex Data",
+    "date": "2026-08-27",
+    "category": "hiring",
+    "event": "Opened multiple technical support and developer evangelist positions",
+    "source": "Synthetic hiring update"
+  },
+  {
+    "competitor": "Vertex Data",
+    "date": "2026-09-02",
+    "category": "product",
+    "event": "Released collaborative shared workspace with live multiplayer canvas editing",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Vertex Data",
+    "date": "2026-09-08",
+    "category": "packaging",
+    "event": "Created Team Plus package bridging starter accounts to mid-market departmental usage",
+    "source": "Synthetic packaging update"
+  },
+  {
+    "competitor": "Vertex Data",
+    "date": "2026-09-14",
+    "category": "enterprise",
+    "event": "Added basic SCIM user provisioning and workspace management controls",
+    "source": "Synthetic enterprise announcement"
+  },
+  {
+    "competitor": "Vertex Data",
+    "date": "2026-09-19",
+    "category": "hiring",
+    "event": "Began recruiting enterprise sales directors to target mid-market expansions",
+    "source": "Synthetic hiring update"
+  },
+  {
+    "competitor": "Vertex Data",
+    "date": "2026-09-23",
+    "category": "product",
+    "event": "Introduced pre-built industry analytics modules for healthcare and manufacturing",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Vertex Data",
+    "date": "2026-09-27",
+    "category": "messaging",
+    "event": "Shifted positioning from startup-only tool to scalable intelligence platform for growing businesses",
+    "source": "Synthetic messaging update"
   }
 ]
