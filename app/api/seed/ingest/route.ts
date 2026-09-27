@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateGeminiContent } from "@/lib/gemini/client";
-import { getHindsightClient } from "@/lib/hindsight";
+import { getHindsightClient, buildMemoryContent } from "@/lib/hindsight";
 
 const BANK_ID = "competitive-intelligence";
 
@@ -224,14 +224,14 @@ Do not invent facts that are not present in the input.
 
       const intelligence = JSON.parse(cleanedText);
 
-      const memoryContent = [
-        `Competitor: ${intelligence.competitor}`,
-        `Category: ${intelligence.category}`,
-        `Event: ${intelligence.event}`,
-        `Strategic signal: ${intelligence.strategic_signal}`,
-        `Source: ${intelligence.source}`,
-        `Date: ${intelligence.date}`,
-      ].join("\n");
+      // Issue 5 fix: Canonical memory content helper (identical field set across all paths)
+      const memoryContent = buildMemoryContent({
+        competitor: intelligence.competitor,
+        category: intelligence.category,
+        event: intelligence.event,
+        source: intelligence.source,
+        date: intelligence.date,
+      });
 
       await hindsight.retain(BANK_ID, memoryContent, {
         context: "competitive-intelligence-seed",
