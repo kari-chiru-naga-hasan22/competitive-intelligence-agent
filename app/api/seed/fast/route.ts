@@ -129,7 +129,20 @@ export async function POST() {
 
     const results = [];
 
-    for (const item of EVENTS) {
+    // Load full 45-event dataset if present, fallback to built-in events
+    let eventsToSeed = EVENTS;
+    try {
+      const fs = await import("node:fs");
+      const path = await import("node:path");
+      const filePath = path.join(process.cwd(), "data", "competitors.json");
+      if (fs.existsSync(filePath)) {
+        eventsToSeed = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+      }
+    } catch (e) {
+      console.warn("Using built-in EVENTS list for seeding:", e);
+    }
+
+    for (const item of eventsToSeed) {
       // Issue 5 fix: Canonical memory content helper
       const memoryContent = buildMemoryContent({
         competitor: item.competitor,

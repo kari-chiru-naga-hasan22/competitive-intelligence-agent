@@ -111,9 +111,26 @@ const EVENTS = [
 ];
 
 export async function GET() {
+  try {
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    const filePath = path.join(process.cwd(), "data", "competitors.json");
+
+    if (fs.existsSync(filePath)) {
+      const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+      return NextResponse.json({
+        success: true,
+        count: data.length,
+        events: data,
+      });
+    }
+  } catch (error) {
+    console.warn("Falling back to built-in events list:", error);
+  }
+
   return NextResponse.json({
     success: true,
     count: EVENTS.length,
     events: EVENTS,
   });
-}
+}
