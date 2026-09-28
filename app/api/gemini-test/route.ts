@@ -1,15 +1,11 @@
 import { NextResponse } from "next/server";
-import { getGeminiClient } from "@/lib/gemini/client";
+import { generateGeminiContent } from "@/lib/gemini/client";
 
 export async function GET() {
   try {
-    const ai = getGeminiClient();
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3.7-flash",
-      contents:
-        "In one sentence, explain why persistent memory matters for a competitive intelligence agent.",
-    });
+    const response = await generateGeminiContent(
+      "In one sentence, explain why persistent memory matters for a competitive intelligence agent."
+    );
 
     return NextResponse.json({
       success: true,
@@ -22,6 +18,7 @@ export async function GET() {
       {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
+        code: (error as { code?: string })?.code || "GEMINI_UNAVAILABLE",
       },
       { status: 500 }
     );

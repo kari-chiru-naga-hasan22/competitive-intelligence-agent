@@ -76,17 +76,26 @@ export function AddEventModal({
         <form onSubmit={handleSubmit} className="space-y-3.5 text-sm">
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1">
-              Competitor
+              Target Company
             </label>
-            <select
+            <input
+              type="text"
+              required
+              list="competitor-presets"
               value={competitor}
               onChange={(e) => setCompetitor(e.target.value)}
+              placeholder="E.g. Acme Cloud, Shopify, HubSpot..."
               className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-900"
-            >
-              <option value="Acme Cloud">Acme Cloud</option>
-              <option value="Nimbus Analytics">Nimbus Analytics</option>
-              <option value="Vertex Data">Vertex Data</option>
-            </select>
+            />
+            <datalist id="competitor-presets">
+              <option value="Acme Cloud" />
+              <option value="Nimbus Analytics" />
+              <option value="Vertex Data" />
+              <option value="Shopify" />
+              <option value="HubSpot" />
+              <option value="Slack" />
+              <option value="Notion" />
+            </datalist>
           </div>
 
           <div>

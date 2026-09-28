@@ -11,10 +11,14 @@ export interface HeroSectionProps {
   loading: boolean;
 }
 
-const COMPETITORS = [
+const PRESET_COMPETITORS = [
   { name: "Acme Cloud", defaultQ: "What changed in their strategy?" },
   { name: "Nimbus Analytics", defaultQ: "What is Nimbus Analytics' enterprise and AI strategy?" },
   { name: "Vertex Data", defaultQ: "How has Vertex Data positioned its products and pricing?" },
+  { name: "Shopify", defaultQ: "What changed in Shopify's strategy?" },
+  { name: "HubSpot", defaultQ: "How has HubSpot's enterprise and pricing strategy evolved?" },
+  { name: "Slack", defaultQ: "What products and AI features did Slack prioritize recently?" },
+  { name: "Notion", defaultQ: "How has Notion evolved its positioning and AI packaging?" },
 ];
 
 const SUGGESTIONS = [
@@ -33,12 +37,14 @@ export function HeroSection({
   loading,
 }: HeroSectionProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [customInput, setCustomInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSelect = (name: string, defaultQ: string) => {
     onCompetitorChange(name);
     onQuestionChange(defaultQ);
     setDropdownOpen(false);
+    setCustomInput("");
   };
 
   const handleChipClick = (chipText: string) => {
@@ -53,6 +59,12 @@ export function HeroSection({
         onAnalyze();
       }
     }
+  };
+
+  const handleApplyCustom = () => {
+    const trimmed = customInput.trim();
+    if (!trimmed) return;
+    handleSelect(trimmed, `What changed in ${trimmed}'s strategy?`);
   };
 
   return (
@@ -123,48 +135,70 @@ export function HeroSection({
                   <span className="text-white font-medium text-sm sm:text-base">{competitor}</span>
                 </div>
 
-                <svg
-                  className={`w-4 h-4 text-white transition-transform ${
-                    dropdownOpen ? "rotate-180" : ""
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono uppercase text-white/50 border border-white/15 px-2 py-0.5 rounded">
+                    Change &darr;
+                  </span>
+                </div>
               </button>
 
-              {/* Dropdown Options */}
+              {/* Dropdown Options (Phase 9: Preset + Custom Company Support) */}
               {dropdownOpen && (
                 <>
                   <div
                     className="fixed inset-0 z-30"
                     onClick={() => setDropdownOpen(false)}
                   />
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-black/90 border border-white/20 rounded-xl shadow-2xl z-40 overflow-hidden divide-y divide-white/10 backdrop-blur-2xl">
-                    {COMPETITORS.map((c) => (
-                      <button
-                        key={c.name}
-                        type="button"
-                        onClick={() => handleSelect(c.name, c.defaultQ)}
-                        className={`w-full text-left px-5 py-3 text-xs font-medium uppercase tracking-wider hover:bg-white/15 transition-colors flex items-center justify-between cursor-pointer ${
-                          c.name === competitor
-                            ? "bg-white/20 text-white"
-                            : "text-white/80"
-                        }`}
-                      >
-                        <span className="text-white">{c.name}</span>
-                        {c.name === competitor && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_6px_#fff]"></span>
-                        )}
-                      </button>
-                    ))}
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-black/95 border border-white/20 rounded-xl shadow-2xl z-40 overflow-hidden divide-y divide-white/10 backdrop-blur-2xl">
+                    <div className="max-h-60 overflow-y-auto divide-y divide-white/10">
+                      {PRESET_COMPETITORS.map((c) => (
+                        <button
+                          key={c.name}
+                          type="button"
+                          onClick={() => handleSelect(c.name, c.defaultQ)}
+                          className={`w-full text-left px-5 py-3 text-xs font-medium uppercase tracking-wider hover:bg-white/15 transition-colors flex items-center justify-between cursor-pointer ${
+                            c.name === competitor
+                              ? "bg-white/20 text-white"
+                              : "text-white/80"
+                          }`}
+                        >
+                          <span className="text-white">{c.name}</span>
+                          {c.name === competitor && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_6px_#fff]"></span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Custom Company Input (Phase 9 requirement) */}
+                    <div className="p-3 bg-white/[0.04] space-y-2">
+                      <div className="text-[10px] font-mono uppercase text-white/60 font-semibold tracking-wider">
+                        + Enter Custom Company:
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={customInput}
+                          onChange={(e) => setCustomInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleApplyCustom();
+                            }
+                          }}
+                          placeholder="E.g. Stripe, Datadog..."
+                          className="flex-1 px-3 py-1.5 rounded-lg bg-black/60 border border-white/20 text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-white/60 font-sans"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyCustom}
+                          disabled={!customInput.trim()}
+                          className="px-3 py-1.5 rounded-lg bg-white text-black font-mono text-xs font-bold uppercase tracking-wider hover:bg-slate-200 transition-colors disabled:opacity-40 cursor-pointer"
+                        >
+                          Select
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </>
               )}

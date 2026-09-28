@@ -1,6 +1,6 @@
 interface NavbarProps {
-  activeTab: "dashboard" | "competitors" | "insights";
-  onTabChange: (tab: "dashboard" | "competitors" | "insights") => void;
+  activeTab: "dashboard" | "history" | "insights";
+  onTabChange: (tab: "dashboard" | "history" | "insights") => void;
   onOpenSettings: () => void;
   onOpenAddEvent?: () => void;
 }
@@ -43,9 +43,9 @@ export function Navbar({ activeTab, onTabChange, onOpenSettings }: NavbarProps) 
           </button>
           <button
             type="button"
-            onClick={() => onTabChange("competitors")}
+            onClick={() => onTabChange("history")}
             className={`px-4 py-1.5 rounded-full text-xs font-mono uppercase tracking-wider transition-all cursor-pointer ${
-              activeTab === "competitors"
+              activeTab === "history"
                 ? "bg-white text-black font-bold shadow-[0_0_15px_rgba(255,255,255,0.3)]"
                 : "text-white/60 hover:text-white hover:bg-white/[0.06]"
             }`}

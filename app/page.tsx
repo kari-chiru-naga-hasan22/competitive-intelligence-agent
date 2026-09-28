@@ -4,23 +4,26 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
 import { IntelligenceDossier } from "@/components/IntelligenceDossier";
-import { CompetitorsView } from "@/components/CompetitorsView";
+import { HistoryView } from "@/components/HistoryView";
 import { InsightsView } from "@/components/InsightsView";
 import { AddEventModal } from "@/components/AddEventModal";
 import { SettingsModal } from "@/components/SettingsModal";
 import { LoadingState } from "@/components/LoadingState";
-import { analyzeCompetitor, IntelligenceResponse } from "@/lib/api";
+import {
+  analyzeCompetitor,
+  IntelligenceResponse,
+  HistoryItem,
+  SEEDED_ARCHIVES,
+} from "@/lib/api";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"dashboard" | "competitors" | "insights">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "history" | "insights">("dashboard");
   const [competitor, setCompetitor] = useState("Acme Cloud");
-  const [question, setQuestion] = useState(
-    "What changed in their strategy?"
-  );
+  const [question, setQuestion] = useState("What changed in their strategy?");
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<IntelligenceResponse | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<{ message: string; code?: string } | null>(null);
 
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -29,20 +32,23 @@ export default function Home() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const runAnalysis = useCallback(
-    async (targetComp: string, targetQuestion: string) => {
+    async (targetComp: string, targetQuestion: string, forceSeeded = false) => {
       setLoading(true);
       setErrorMsg(null);
       setHasSubmitted(true);
       try {
-        const data = await analyzeCompetitor(targetComp, targetQuestion);
+        const data = await analyzeCompetitor(targetComp, targetQuestion, {
+          forceSeededArchive: forceSeeded,
+        });
         setResult(data);
       } catch (err: unknown) {
-        console.error("Analysis failed:", err);
-        setErrorMsg(
+        console.error("Analysis request failed:", err);
+        const code = (err as { code?: string })?.code;
+        const msg =
           err instanceof Error
             ? err.message
-            : "An unexpected error occurred during synthesis."
-        );
+            : "An unexpected error occurred during synthesis.";
+        setErrorMsg({ message: msg, code });
       } finally {
         setLoading(false);
       }
@@ -64,7 +70,15 @@ export default function Home() {
         ? "What is Nimbus Analytics' enterprise and AI strategy?"
         : newComp === "Vertex Data"
         ? "How has Vertex Data positioned its products and pricing?"
-        : "What changed in their strategy?";
+        : newComp === "Shopify"
+        ? "What changed in Shopify's strategy?"
+        : newComp === "HubSpot"
+        ? "How has HubSpot's enterprise and pricing strategy evolved?"
+        : newComp === "Slack"
+        ? "What products and AI features did Slack prioritize recently?"
+        : newComp === "Notion"
+        ? "How has Notion evolved its positioning and AI packaging?"
+        : `What changed in ${newComp}'s strategy?`;
     setQuestion(defaultQ);
   };
 
@@ -76,12 +90,12 @@ export default function Home() {
     runAnalysis(competitor, question);
   };
 
-  const handleSelectFromCompetitorsView = (newComp: string) => {
-    setCompetitor(newComp);
-    const defaultQ = `What changed in their strategy?`;
-    setQuestion(defaultQ);
+  const handleSelectFromHistory = (item: HistoryItem) => {
+    setCompetitor(item.competitor);
+    setQuestion(item.question);
+    setResult(item.response);
+    setHasSubmitted(true);
     setActiveTab("dashboard");
-    runAnalysis(newComp, defaultQ);
   };
 
   const handleSelectFromInsightsView = (newComp: string, promptQ: string) => {
@@ -89,6 +103,14 @@ export default function Home() {
     setQuestion(promptQ);
     setActiveTab("dashboard");
     runAnalysis(newComp, promptQ);
+  };
+
+  const handleLoadSeededArchive = (targetComp: string) => {
+    setCompetitor(targetComp);
+    const defaultQ = SEEDED_ARCHIVES[targetComp]?.question || `What changed in ${targetComp}'s strategy?`;
+    setQuestion(defaultQ);
+    setActiveTab("dashboard");
+    runAnalysis(targetComp, defaultQ, true);
   };
 
   const handleEventAdded = (targetComp: string) => {
@@ -109,7 +131,7 @@ export default function Home() {
       {/* Main Content Body */}
       {activeTab === "dashboard" && (
         <>
-          {/* SECTION 2 & 3: Hero Section with Centered Chatbox and LeasingOne Styling */}
+          {/* SECTION 2 & 3: Hero Section with Centered Chatbox */}
           <HeroSection
             competitor={competitor}
             onCompetitorChange={handleCompetitorChange}
@@ -126,11 +148,31 @@ export default function Home() {
               id="intelligence-results"
               className="flex-1 max-w-[1240px] w-full mx-auto px-4 sm:px-8 py-12 pb-24 space-y-10 scroll-mt-6 animate-in fade-in duration-500"
             >
-              {/* Error Banner */}
+              {/* Error Banner with Explicit Pre-Seeded Option (Phase 3 requirement) */}
               {errorMsg && (
-                <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 text-sm text-rose-800 font-mono">
-                  <p className="font-semibold">Pipeline Alert:</p>
-                  <p className="text-xs mt-1 text-rose-700">{errorMsg}</p>
+                <div className="bg-rose-50 border border-rose-200 rounded-xl p-5 text-sm font-mono space-y-3">
+                  <div className="flex items-center gap-2 text-rose-800 font-bold">
+                    <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse"></span>
+                    <span>PIPELINE ALERT: {errorMsg.code || "REQUEST FAILED"}</span>
+                  </div>
+                  <p className="text-xs text-rose-700 leading-relaxed">
+                    {errorMsg.message}
+                  </p>
+
+                  {SEEDED_ARCHIVES[competitor] && (
+                    <div className="pt-2 border-t border-rose-200/60 flex items-center justify-between flex-wrap gap-3">
+                      <span className="text-xs text-rose-900 font-medium font-sans">
+                        Would you like to inspect the pre-seeded benchmark memory archive for {competitor}?
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleLoadSeededArchive(competitor)}
+                        className="px-4 py-2 rounded-lg bg-[#071824] hover:bg-black text-white text-xs font-mono font-semibold uppercase tracking-wider transition-colors cursor-pointer"
+                      >
+                        Load Seeded Archive &rarr;
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -148,6 +190,9 @@ export default function Home() {
                     observedChanges={result.insight.observed_changes}
                     watchNext={result.insight.watch_next}
                     evidence={result.evidence}
+                    status={result.status}
+                    confidence={result.insight.confidence}
+                    hasPriorObservation={result.hasPriorObservation}
                   />
                 </div>
               )}
@@ -156,12 +201,12 @@ export default function Home() {
         </>
       )}
 
-      {/* TAB 2: COMPETITORS */}
-      {activeTab === "competitors" && (
+      {/* TAB 2: HISTORY (Phase 12: REAL HISTORY) */}
+      {activeTab === "history" && (
         <main className="flex-1 max-w-[1240px] w-full mx-auto px-4 sm:px-8 py-8 pb-24">
-          <CompetitorsView
-            onSelectCompetitor={handleSelectFromCompetitorsView}
-            onOpenAddEvent={() => setIsAddEventOpen(true)}
+          <HistoryView
+            onSelectHistoryItem={handleSelectFromHistory}
+            onLoadSeededBenchmark={handleLoadSeededArchive}
           />
         </main>
       )}
