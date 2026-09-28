@@ -27,6 +27,24 @@
   --skew: 11deg;
 }
 
+html {
+  font-size: 15px;
+  zoom: 0.88;
+}
+
+@media (max-width: 1024px) {
+  html {
+    zoom: 0.92;
+  }
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+    zoom: 1;
+  }
+}
+
 body {
   background-color: var(--bg);
   color: var(--ink);
