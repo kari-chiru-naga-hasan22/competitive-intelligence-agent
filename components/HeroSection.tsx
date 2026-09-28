@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, KeyboardEvent } from "react";
+import { useState, useRef, useEffect, useCallback, KeyboardEvent } from "react";
 import { BorderBeam } from "border-beam";
 import { IntelligenceProcessVisual } from "@/components/IntelligenceProcessVisual";
 
@@ -42,6 +42,7 @@ export function HeroSection({
   const [dropdownCoords, setDropdownCoords] = useState<{ top: number; left: number; width: number } | null>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const dropdownTriggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownMenuRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Detect user preference for reduced motion
@@ -58,29 +59,67 @@ export function HeroSection({
     }
   }, []);
 
-  // Close dropdown on window scroll or resize
-  useEffect(() => {
-    if (!dropdownOpen) return;
-    const handleClose = () => setDropdownOpen(false);
-    window.addEventListener("scroll", handleClose, { passive: true });
-    window.addEventListener("resize", handleClose);
-    return () => {
-      window.removeEventListener("scroll", handleClose);
-      window.removeEventListener("resize", handleClose);
-    };
-  }, [dropdownOpen]);
-
-  const handleToggleDropdown = () => {
-    if (!dropdownOpen && dropdownTriggerRef.current) {
+  const updateCoords = useCallback(() => {
+    if (dropdownTriggerRef.current) {
       const rect = dropdownTriggerRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const targetWidth = Math.max(rect.width, 280);
+      let left = rect.left;
+
+      // Ensure dropdown does not overflow the right edge of viewport
+      if (left + targetWidth > viewportWidth - 16) {
+        left = Math.max(16, viewportWidth - targetWidth - 16);
+      }
+
       setDropdownCoords({
-        top: rect.bottom + 8,
-        left: rect.left,
-        width: rect.width,
+        top: rect.bottom + 6,
+        left,
+        width: Math.min(targetWidth, viewportWidth - 32),
       });
     }
-    setDropdownOpen((prev) => !prev);
+  }, []);
+
+  const handleToggleDropdown = () => {
+    if (!dropdownOpen) {
+      updateCoords();
+      setDropdownOpen(true);
+    } else {
+      setDropdownOpen(false);
+    }
   };
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    updateCoords();
+
+    const handleUpdate = () => {
+      updateCoords();
+    };
+
+    const handlePointerDown = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      if (
+        dropdownMenuRef.current &&
+        !dropdownMenuRef.current.contains(target) &&
+        dropdownTriggerRef.current &&
+        !dropdownTriggerRef.current.contains(target)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleUpdate, { passive: true });
+    window.addEventListener("resize", handleUpdate);
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+
+    return () => {
+      window.removeEventListener("scroll", handleUpdate);
+      window.removeEventListener("resize", handleUpdate);
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+    };
+  }, [dropdownOpen, updateCoords]);
 
   const handleSelect = (name: string, defaultQ: string) => {
     onCompetitorChange(name);
@@ -312,28 +351,33 @@ export function HeroSection({
             </div>
           </BorderBeam>
 
-          {/* Fixed Floating Dropdown Options (Placed outside BorderBeam to avoid overflow clipping) */}
+          {/* Fixed Floating Dropdown Options */}
           {dropdownOpen && dropdownCoords && (
             <>
               <div
-                className="fixed inset-0 z-40"
+                className="fixed inset-0 z-[9990]"
                 onClick={() => setDropdownOpen(false)}
               />
               <div
-                className="fixed bg-white/95 border border-[#DDE3F5] rounded-2xl shadow-2xl z-50 overflow-hidden divide-y divide-[#EEF1FB] backdrop-blur-xl max-h-[320px] overflow-y-auto"
+                ref={dropdownMenuRef}
+                className="fixed bg-white border border-[#DDE3F5] rounded-2xl shadow-[0_20px_50px_rgba(11,13,36,0.22)] z-[9999] overflow-hidden divide-y divide-[#EEF1FB] backdrop-blur-xl max-h-[340px] overflow-y-auto animate-in fade-in zoom-in-95 duration-150"
                 style={{
                   top: `${dropdownCoords.top}px`,
                   left: `${dropdownCoords.left}px`,
                   width: `${dropdownCoords.width}px`,
                 }}
               >
+                <div className="px-4 py-2 bg-[#F7F9FF] border-b border-[#EEF1FB] text-[10px] font-bold uppercase tracking-wider text-[#7A7F99] flex items-center justify-between">
+                  <span>Select Target Competitor</span>
+                  <span>7 Entities</span>
+                </div>
                 {COMPETITORS.map((c) => (
                   <button
                     key={c.name}
                     type="button"
                     onClick={() => handleSelect(c.name, c.defaultQ)}
-                    className={`w-full text-left px-4 py-3.5 hover:bg-[#EEF1FB] transition-colors flex items-center justify-between cursor-pointer ${
-                      c.name === competitor ? "bg-[#EEF1FB]/70 text-[#4338F0]" : "text-[#0B0D24]"
+                    className={`w-full text-left px-4 py-3 hover:bg-[#EEF1FB] transition-colors flex items-center justify-between cursor-pointer ${
+                      c.name === competitor ? "bg-[#EEF1FB]/80 text-[#4338F0]" : "text-[#0B0D24]"
                     }`}
                   >
                     <div>
@@ -345,7 +389,7 @@ export function HeroSection({
                       </span>
                     </div>
                     {c.name === competitor && (
-                      <span className="w-2 h-2 rounded-full bg-[#4338F0] shadow-[0_0_8px_#4338F0]"></span>
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#4338F0] shadow-[0_0_8px_#4338F0]"></span>
                     )}
                   </button>
                 ))}

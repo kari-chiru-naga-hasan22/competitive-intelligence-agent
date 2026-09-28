@@ -28,20 +28,12 @@
 }
 
 html {
-  font-size: 15px;
-  zoom: 0.88;
-}
-
-@media (max-width: 1024px) {
-  html {
-    zoom: 0.92;
-  }
+  font-size: 14.5px; /* Clean proportional scaling across all rem units without breaking coordinate systems */
 }
 
 @media (max-width: 768px) {
   html {
     font-size: 14px;
-    zoom: 1;
   }
 }
 
