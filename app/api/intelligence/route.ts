@@ -9,23 +9,14 @@ export const revalidate = 0;
 
 const BANK_ID = "competitive-intelligence";
 
-const MAX_COMPETITOR_LEN = 100;
-const MAX_QUESTION_LEN = 500;
-
-export type Evidence = {
+type Evidence = {
   date: string;
   category: string;
   event: string;
   source?: string;
 };
 
-export type PriorObservation = {
-  date: string;
-  question?: string;
-  signal: string;
-  summary: string;
-};
-
+// Helper: normalize string for fuzzy comparison (trim, lowercase, strip punctuation)
 function normalizeText(str: string): string {
   return str
     .toLowerCase()
@@ -103,23 +94,19 @@ function getTextSimilarity(strA: string, strB: string): number {
   return union === 0 ? 0 : intersection / union;
 }
 
-interface RawMemoryItem {
-  text?: string | null;
-  context?: string | null;
-  occurred_start?: string | null;
-  entities?: string[] | null;
-  [key: string]: unknown;
-}
-
 export async function POST(request: Request) {
   try {
-    // 1. Validate Input & Security
-    const body = await request.json().catch(() => ({}));
+    // 1. Read the intelligence question
+    const body = await request.json();
+
     const { competitor, question } = body;
 
-    if (!competitor || typeof competitor !== "string" || !competitor.trim()) {
+    if (!competitor || !question) {
       return NextResponse.json(
-        { success: false, error: "Competitor name is required", code: "INVALID_INPUT" },
+        {
+          success: false,
+          error: "competitor and question are required",
+        },
         { status: 400 }
       );
     }
@@ -178,69 +165,37 @@ export async function POST(request: Request) {
       });
     }
 
-    const cleanCompetitor = competitor.trim().slice(0, MAX_COMPETITOR_LEN);
-    const cleanQuestion = question.trim().slice(0, MAX_QUESTION_LEN);
-
-    // 2. Check Service Configurations
-    if (!isHindsightConfigured()) {
-      console.warn("[intelligence] HINDSIGHT_API_KEY is not configured.");
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Hindsight memory engine is not configured. Set HINDSIGHT_API_KEY in .env.local to enable live recall.",
-          code: "HINDSIGHT_UNAVAILABLE",
-        },
-        { status: 503 }
-      );
-    }
-
-    const hindsight = getHindsightClient();
-
-    // 3. Multi-Query Temporal Recall from Hindsight
-    console.log(`[intelligence] Recalling memory for: "${cleanCompetitor}" query: "${cleanQuestion}"`);
-
-    const [eventRecall, observationRecall] = await Promise.all([
-      hindsight.recall(
-        BANK_ID,
-        `${cleanCompetitor}: ${cleanQuestion} pricing product launch packaging strategy`,
-        { maxTokens: 2000, budget: "low" }
-      ).catch((err) => {
-        console.error("[intelligence] Event recall failed:", err);
-        return { results: [] };
-      }),
-      hindsight.recall(
-        BANK_ID,
-        `${cleanCompetitor}: strategic observation previous analysis history trajectory`,
-        { maxTokens: 1200, budget: "low" }
-      ).catch((err) => {
-        console.error("[intelligence] Observation recall failed:", err);
-        return { results: [] };
-      }),
-    ]);
-
-    const rawMemories: RawMemoryItem[] = [
-      ...(eventRecall.results || []),
-      ...(observationRecall.results || []),
-    ];
-
-    // 4. Memory Isolation & Deduplication
+    // 3. Remove duplicate memories
     const uniqueMemoryTexts = new Set<string>();
-    const competitorMemories = rawMemories.filter((mem) => {
-      const text = mem.text?.trim();
-      if (!text) return false;
-      if (!isCompetitorMatch(text, cleanCompetitor)) return false;
-      const lower = text.toLowerCase();
-      if (uniqueMemoryTexts.has(lower)) return false;
-      uniqueMemoryTexts.add(lower);
+
+    const uniqueMemories = memories.filter((memory) => {
+      const text = memory.text?.trim();
+
+      if (!text) {
+        return false;
+      }
+
+      // Issue 1 fix: Fuzzy/normalized competitor matching (supports token sequence, typos, and punctuation variants)
+      if (!isCompetitorMatch(text, competitor)) {
+        return false;
+      }
+
+      const normalized = text.toLowerCase();
+
+      if (uniqueMemoryTexts.has(normalized)) {
+        return false;
+      }
+
+      uniqueMemoryTexts.add(normalized);
+
       return true;
     });
 
     // 4. Convert memories into evidence candidates
     const evidenceList: Evidence[] = [];
-    const priorObservations: PriorObservation[] = [];
 
-    for (const mem of competitorMemories) {
-      const text = mem.text || "";
+    for (const memory of uniqueMemories) {
+      const text = memory.text || "";
 
       // Drop market generalizations or speculative notes that are not specific competitor actions
       const lowerText = text.toLowerCase();
@@ -290,8 +245,20 @@ export async function POST(request: Request) {
         continue;
       }
 
-      const catMatch = text.match(/^Category:\s*([^\n|]+)/im);
-      let category = catMatch?.[1]?.trim().toLowerCase() || "product";
+      // Start with Hindsight's category/entity information.
+      const categoryMatch = text.match(/^Category:\s*([^\n|]+)/im);
+      let category =
+        categoryMatch?.[1]?.trim().toLowerCase() ||
+        memory.entities?.find((entity: string) =>
+          [
+            "pricing",
+            "product",
+            "messaging",
+            "hiring",
+            "partnership",
+            "packaging",
+          ].includes(entity.toLowerCase())
+        ) || "other";
 
       // Normalize category using the actual event text.
       if (
@@ -342,6 +309,7 @@ export async function POST(request: Request) {
         category = "product";
       }
 
+      // Extract clean event text
       const eventLineMatch = text.match(/^Event:\s*([^\n]+)/im);
       let event = eventLineMatch
         ? eventLineMatch[1].trim()
@@ -357,7 +325,12 @@ export async function POST(request: Request) {
             .replace(/\s*\|\s*Inferred.*$/i, "")
             .trim();
 
-      if (!event) continue;
+      if (!event) {
+        console.warn(
+          `[intelligence] Dropping memory with no extractable event text: "${text.slice(0, 80)}"`
+        );
+        continue;
+      }
 
       // Ground source label: Synthetic CI dataset
       const source = "Synthetic CI dataset";
@@ -405,50 +378,54 @@ export async function POST(request: Request) {
       .sort((a, b) => a.date.localeCompare(b.date))
       .slice(0, 20);
 
-    // 6. Handle Zero Evidence (Phase 9 requirement)
+    // Issue 4 fix: Guardrail for sparse/insufficient evidence
     if (evidence.length === 0) {
       return NextResponse.json({
         success: true,
-        status: "NO_EVIDENCE",
-        competitor: cleanCompetitor,
-        question: cleanQuestion,
+        competitor,
+        question,
         insight: {
-          summary: `No company-specific historical evidence is currently stored for ${cleanCompetitor}.`,
+          summary: `There is not enough historical memory for ${competitor} to answer this question yet.`,
           observed_changes: [],
-          strategic_signal: `Insufficient historical baseline to infer ${cleanCompetitor}'s strategy.`,
-          watch_next: [
-            `Add events for ${cleanCompetitor} using the '+ Add Event' modal to establish persistent memory.`,
-            `Monitor public product announcements and pricing pages for initial baseline data.`,
-          ],
-          confidence: 0,
+          strategic_signal: "Insufficient historical evidence.",
+          watch_next: [],
         },
         evidence: [],
-        hasPriorObservation: false,
       });
     }
 
-    // 7. Format Context for Gemini (incorporating Prior Knowledge from Hindsight!)
+    // Direct low-evidence return for single isolated event without calling Gemini
+    if (evidence.length < 2) {
+      const single = evidence[0];
+      return NextResponse.json({
+        success: true,
+        competitor,
+        question,
+        insight: {
+          summary: `Only a single event is recorded for ${competitor}: ${single.event} (${single.date}). Insufficient historical data to establish a strategic pattern or trend.`,
+          observed_changes: [single.event],
+          strategic_signal:
+            "Single data point; insufficient history to infer strategic direction.",
+          watch_next: [
+            `Monitor for subsequent moves by ${competitor} to determine whether this indicates a broader shift.`,
+          ],
+        },
+        evidence,
+      });
+    }
+
+    // 6. Give Gemini the clean historical evidence
     const evidenceContext = evidence
       .map(
         (item, index) =>
-          `[Event ${index + 1}] Date: ${item.date} | Category: ${item.category} | Source: ${item.source || "Web"}\nFact: ${item.event}`
+          `Evidence ${index + 1}:
+Date: ${item.date}
+Category: ${item.category}
+Event: ${item.event}`
       )
       .join("\n\n");
 
-    const priorKnowledgeContext =
-      priorObservations.length > 0
-        ? `\n\nPREVIOUS STRATEGIC OBSERVATIONS RECALLED FROM MEMORY:
-${priorObservations
-  .slice(0, 3)
-  .map(
-    (obs, i) =>
-      `Observation ${i + 1} (${obs.date}):
-Question Analyzed: "${obs.question || "N/A"}"
-Prior Inferred Signal: ${obs.signal}
-Prior Summary: ${obs.summary}`
-  )
-  .join("\n\n")}`
-        : "\n\nPREVIOUS STRATEGIC OBSERVATIONS: None on file (Initial baseline analysis).";
+    const isSparseEvidence = evidence.length < 3;
 
     // 7. Ask Gemini to reason over the accumulated history
     const geminiResponse = await generateGeminiContent(`
@@ -464,7 +441,6 @@ ${question}
 
 Retrieved Historical Evidence (Chronological):
 ${evidenceContext}
-${priorKnowledgeContext}
 
 CORE INSTRUCTIONS & REASONING STANDARDS:
 
@@ -504,67 +480,28 @@ Return ONLY a valid JSON object matching this schema without markdown fences:
 }
 `);
 
-      const rawText = geminiResponse.text?.trim() || "";
-      insight = extractJsonObject<{
-        summary: string;
-        observed_changes: string[];
-        strategic_signal: string;
-        watch_next: string[];
-        confidence?: number;
-      }>(rawText);
-    } catch (llmErr) {
-      console.error("[intelligence] Gemini generation/parsing failed:", llmErr);
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Strategic reasoning engine failed to synthesize intelligence.",
-          code: (llmErr as { code?: string })?.code || "LLM_PARSE_ERROR",
-        },
-        { status: 502 }
-      );
+    // 8. Parse Gemini response
+    const rawText = geminiResponse.text?.trim();
+
+    if (!rawText) {
+      throw new Error("Gemini returned an empty response");
     }
 
-    // Ensure safe defaults
-    const confidenceScore =
-      typeof insight.confidence === "number" && insight.confidence > 0
-        ? insight.confidence
-        : Math.min(95, 50 + evidence.length * 8);
+    const cleanedText = rawText
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
 
-    // 9. COMPLETE THE FEEDBACK LOOP: RETAIN THE GENERATED OBSERVATION (Phase 6 requirement)
-    try {
-      const observationMemory = buildObservationMemoryContent({
-        competitor: cleanCompetitor,
-        question: cleanQuestion,
-        summary: insight.summary,
-        strategicSignal: insight.strategic_signal,
-        observedChanges: insight.observed_changes || [],
-      });
+    const insight = JSON.parse(cleanedText);
 
-      await hindsight.retain(BANK_ID, observationMemory, {
-        context: "competitive-intelligence-observation",
-        timestamp: new Date(),
-      });
-      console.log(`[intelligence] Successfully retained strategic observation for ${cleanCompetitor} in Hindsight.`);
-    } catch (retainErr) {
-      console.warn("[intelligence] Non-critical: Failed to retain observation in Hindsight:", retainErr);
-    }
-
-    // 10. Return clean live intelligence
+    // 9. Return clean intelligence + evidence
     return NextResponse.json({
       success: true,
-      status: "LIVE",
-      competitor: cleanCompetitor,
-      question: cleanQuestion,
-      insight: {
-        summary: insight.summary,
-        observed_changes: insight.observed_changes || [],
-        strategic_signal: insight.strategic_signal,
-        watch_next: insight.watch_next || [],
-        confidence: confidenceScore,
-      },
+      competitor,
+      question,
+      insight,
       evidence,
-      hasPriorObservation: priorObservations.length > 0,
-      priorObservationCount: priorObservations.length,
     });
   } catch (error) {
     console.error("Intelligence request failed:", error);

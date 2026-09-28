@@ -78,7 +78,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <div className="flex items-center gap-2">
                 <span className="font-bold text-xs text-[#0F172A]">Google Gemini</span>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
-                  Model: gemini-2.0-flash
+                  Model: gemini-3.8-flash / 3.7-flash
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-1">

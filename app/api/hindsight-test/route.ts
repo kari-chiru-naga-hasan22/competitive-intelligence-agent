@@ -1,22 +1,14 @@
 import { NextResponse } from "next/server";
-import { getHindsightClient, isHindsightConfigured } from "@/lib/hindsight";
+import { getHindsightClient } from "@/lib/hindsight";
 
 export async function GET() {
-  if (!isHindsightConfigured()) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: "HINDSIGHT_API_KEY is not configured",
-        code: "HINDSIGHT_UNAVAILABLE",
-      },
-      { status: 503 }
-    );
-  }
-
   try {
     const hindsight = getHindsightClient();
+
     const bankId = "competitive-intelligence";
 
+    // Create the memory bank.
+    // If it already exists, we continue.
     try {
       await hindsight.createBank(bankId, {
         name: "Competitive Intelligence",
@@ -24,10 +16,10 @@ export async function GET() {
           "A memory bank for tracking competitor products, pricing, launches, hiring, messaging, and strategic changes over time.",
       });
     } catch {
-      // Bank may already exist
+      // Bank may already exist — that's okay.
     }
 
-    // Store test memory
+    // Store ONE test memory.
     await hindsight.retain(
       bankId,
       "Acme Cloud reduced its Pro plan price from $49 to $39 per month on September 27, 2026. This may indicate increased price competition in the cloud analytics market.",
@@ -37,7 +29,7 @@ export async function GET() {
       }
     );
 
-    // Search the memory
+    // Search the memory.
     const recallResult = await hindsight.recall(
       bankId,
       "What changed in Acme Cloud pricing?",
@@ -59,7 +51,6 @@ export async function GET() {
       {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
-        code: (error as { code?: string })?.code || "HINDSIGHT_UNAVAILABLE",
       },
       { status: 500 }
     );
