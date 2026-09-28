@@ -313,5 +313,425 @@
     "category": "messaging",
     "event": "Shifted positioning from startup-only tool to scalable intelligence platform for growing businesses",
     "source": "Synthetic messaging update"
+  },
+  {
+    "competitor": "Shopify",
+    "date": "2026-07-02",
+    "category": "product",
+    "event": "Launched Shopify Magic image generation and AI copy tools for storefront merchants",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Shopify",
+    "date": "2026-07-08",
+    "category": "product",
+    "event": "Released unified B2B wholesale portal with custom catalogs and net-payment terms",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Shopify",
+    "date": "2026-07-14",
+    "category": "packaging",
+    "event": "Bundled Shopify Markets cross-border currency conversion into standard merchant admin",
+    "source": "Synthetic packaging update"
+  },
+  {
+    "competitor": "Shopify",
+    "date": "2026-07-21",
+    "category": "pricing",
+    "event": "Adjusted Plus enterprise plan baseline to $2,500/mo on multi-year contract terms",
+    "source": "Synthetic pricing page"
+  },
+  {
+    "competitor": "Shopify",
+    "date": "2026-07-28",
+    "category": "enterprise",
+    "event": "Introduced headless commerce SDKs and enterprise SLA guarantees for high-volume retailers",
+    "source": "Synthetic enterprise announcement"
+  },
+  {
+    "competitor": "Shopify",
+    "date": "2026-08-03",
+    "category": "messaging",
+    "event": "Positioned Shopify as unified commerce platform bridging physical POS, online storefronts, and B2B",
+    "source": "Synthetic messaging update"
+  },
+  {
+    "competitor": "Shopify",
+    "date": "2026-08-09",
+    "category": "product",
+    "event": "Introduced Sidekick conversational AI merchant assistant for inventory analytics and discounts",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Shopify",
+    "date": "2026-08-16",
+    "category": "partnership",
+    "event": "Partnered with enterprise ERP providers for real-time inventory and fulfillment synchronization",
+    "source": "Synthetic partnership announcement"
+  },
+  {
+    "competitor": "Shopify",
+    "date": "2026-08-22",
+    "category": "product",
+    "event": "Upgraded Shopify POS terminal hardware and offline checkout resilience for retail chains",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Shopify",
+    "date": "2026-08-28",
+    "category": "hiring",
+    "event": "Expanded enterprise solutions engineering team targeting Fortune 500 retail migrations",
+    "source": "Synthetic hiring update"
+  },
+  {
+    "competitor": "Shopify",
+    "date": "2026-09-03",
+    "category": "pricing",
+    "event": "Introduced tiered volume discounts on Shop Pay transaction fees for high-GMV merchants",
+    "source": "Synthetic pricing page"
+  },
+  {
+    "competitor": "Shopify",
+    "date": "2026-09-10",
+    "category": "product",
+    "event": "Launched automated multi-currency tax calculation and duties collection in Markets Pro",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Shopify",
+    "date": "2026-09-16",
+    "category": "enterprise",
+    "event": "Rolled out role-based organization management and unified single sign-on across merchant stores",
+    "source": "Synthetic enterprise announcement"
+  },
+  {
+    "competitor": "Shopify",
+    "date": "2026-09-22",
+    "category": "product",
+    "event": "Released AI-powered product categorization and auto-tagging across merchant catalogs",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Shopify",
+    "date": "2026-09-27",
+    "category": "messaging",
+    "event": "Centered global marketing campaign on enterprise commerce agility versus legacy monolithic suites",
+    "source": "Synthetic messaging update"
+  },
+  {
+    "competitor": "HubSpot",
+    "date": "2026-07-03",
+    "category": "product",
+    "event": "Launched Breeze AI suite integrating predictive lead scoring and automated sales email drafting",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "HubSpot",
+    "date": "2026-07-09",
+    "category": "pricing",
+    "event": "Transitioned to seat-based pricing model eliminating minimum seat requirements on Core hubs",
+    "source": "Synthetic pricing page"
+  },
+  {
+    "competitor": "HubSpot",
+    "date": "2026-07-16",
+    "category": "enterprise",
+    "event": "Added granular permission sets and custom object field governance for enterprise teams",
+    "source": "Synthetic enterprise announcement"
+  },
+  {
+    "competitor": "HubSpot",
+    "date": "2026-07-22",
+    "category": "product",
+    "event": "Introduced Breeze Customer Agent for autonomous 24/7 Tier-1 support resolution",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "HubSpot",
+    "date": "2026-07-29",
+    "category": "packaging",
+    "event": "Bundled Content Hub Starter with Marketing Hub to unify content operations and lead capture",
+    "source": "Synthetic packaging update"
+  },
+  {
+    "competitor": "HubSpot",
+    "date": "2026-08-04",
+    "category": "messaging",
+    "event": "Repositioned from marketing automation point solution to unified Smart CRM platform",
+    "source": "Synthetic messaging update"
+  },
+  {
+    "competitor": "HubSpot",
+    "date": "2026-08-11",
+    "category": "product",
+    "event": "Launched Breeze Intelligence for automated data enrichment and company intent signaling",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "HubSpot",
+    "date": "2026-08-17",
+    "category": "partnership",
+    "event": "Formed strategic co-selling alliance with cloud data warehouse and snowflake ecosystem partners",
+    "source": "Synthetic partnership announcement"
+  },
+  {
+    "competitor": "HubSpot",
+    "date": "2026-08-24",
+    "category": "pricing",
+    "event": "Introduced usage-based credit packages for high-frequency AI prospecting and data enrichment",
+    "source": "Synthetic pricing page"
+  },
+  {
+    "competitor": "HubSpot",
+    "date": "2026-08-30",
+    "category": "hiring",
+    "event": "Recruited enterprise CRM account executives focused on displacing legacy Salesforce installations",
+    "source": "Synthetic hiring update"
+  },
+  {
+    "competitor": "HubSpot",
+    "date": "2026-09-05",
+    "category": "product",
+    "event": "Released Operations Hub advanced data sync with bidirectional schema validation",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "HubSpot",
+    "date": "2026-09-12",
+    "category": "enterprise",
+    "event": "Introduced multi-hub audit logging and enterprise compliance certification reporting",
+    "source": "Synthetic enterprise announcement"
+  },
+  {
+    "competitor": "HubSpot",
+    "date": "2026-09-18",
+    "category": "product",
+    "event": "Deployed autonomous Prospecting Agent to qualify outbound and inbound inquiries automatically",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "HubSpot",
+    "date": "2026-09-23",
+    "category": "packaging",
+    "event": "Created Customer Platform Bundle offering all hubs at unified volume discount tier",
+    "source": "Synthetic packaging update"
+  },
+  {
+    "competitor": "HubSpot",
+    "date": "2026-09-26",
+    "category": "messaging",
+    "event": "Emphasized ease-of-use and AI-powered unified data layer over fragmented enterprise CRM suites",
+    "source": "Synthetic messaging update"
+  },
+  {
+    "competitor": "Slack",
+    "date": "2026-07-01",
+    "category": "product",
+    "event": "Launched Slack AI generative channel recaps and conversation thread summarization",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Slack",
+    "date": "2026-07-07",
+    "category": "product",
+    "event": "Released Slack Lists for structured task tracking and cross-functional team project management",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Slack",
+    "date": "2026-07-13",
+    "category": "enterprise",
+    "event": "Introduced Enterprise Grid centralized key management (EKM) with customer-managed encryption",
+    "source": "Synthetic enterprise announcement"
+  },
+  {
+    "competitor": "Slack",
+    "date": "2026-07-19",
+    "category": "pricing",
+    "event": "Added Slack AI as a paid add-on license at $10 per user per month on Pro and Business+ plans",
+    "source": "Synthetic pricing page"
+  },
+  {
+    "competitor": "Slack",
+    "date": "2026-07-26",
+    "category": "product",
+    "event": "Upgraded Workflow Builder with no-code connectors for external developer webhooks",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Slack",
+    "date": "2026-08-02",
+    "category": "messaging",
+    "event": "Positioned Slack as conversational work operating system powered by integrated agents",
+    "source": "Synthetic messaging update"
+  },
+  {
+    "competitor": "Slack",
+    "date": "2026-08-08",
+    "category": "product",
+    "event": "Integrated Salesforce Agentforce enabling third-party autonomous AI agents directly within channels",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Slack",
+    "date": "2026-08-15",
+    "category": "partnership",
+    "event": "Announced deep integrations with Google Workspace, Box, and Workday for collaborative previews",
+    "source": "Synthetic partnership announcement"
+  },
+  {
+    "competitor": "Slack",
+    "date": "2026-08-21",
+    "category": "enterprise",
+    "event": "Added automated data loss prevention (DLP) native scanning and information barriers",
+    "source": "Synthetic enterprise announcement"
+  },
+  {
+    "competitor": "Slack",
+    "date": "2026-08-27",
+    "category": "hiring",
+    "event": "Expanded platform ecosystem engineering group to accelerate third-party AI app development",
+    "source": "Synthetic hiring update"
+  },
+  {
+    "competitor": "Slack",
+    "date": "2026-09-02",
+    "category": "product",
+    "event": "Launched AI search synthesis delivering synthesized answers across channels and shared files",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Slack",
+    "date": "2026-09-09",
+    "category": "packaging",
+    "event": "Bundled Slack Lists and advanced Workflow Builder steps into Business+ tier at no extra cost",
+    "source": "Synthetic packaging update"
+  },
+  {
+    "competitor": "Slack",
+    "date": "2026-09-15",
+    "category": "pricing",
+    "event": "Introduced enterprise-wide tiered volume pricing for Slack AI deployments exceeding 5,000 seats",
+    "source": "Synthetic pricing page"
+  },
+  {
+    "competitor": "Slack",
+    "date": "2026-09-21",
+    "category": "product",
+    "event": "Introduced Slack Huddles AI live transcriptions, multi-screen sharing, and auto-generated action items",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Slack",
+    "date": "2026-09-27",
+    "category": "messaging",
+    "event": "Reframed Slack as the conversational interface for the enterprise AI agent workforce",
+    "source": "Synthetic messaging update"
+  },
+  {
+    "competitor": "Notion",
+    "date": "2026-07-02",
+    "category": "product",
+    "event": "Launched Notion AI Q&A answering user queries across all connected workspace docs and databases",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Notion",
+    "date": "2026-07-08",
+    "category": "product",
+    "event": "Released Notion Calendar with bidirectional scheduling and database event sync",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Notion",
+    "date": "2026-07-15",
+    "category": "enterprise",
+    "event": "Introduced granular workspace analytics and member permission audit logs for Enterprise accounts",
+    "source": "Synthetic enterprise announcement"
+  },
+  {
+    "competitor": "Notion",
+    "date": "2026-07-21",
+    "category": "pricing",
+    "event": "Restructured Notion AI add-on to $8 per member per month on annual billing plans",
+    "source": "Synthetic pricing page"
+  },
+  {
+    "competitor": "Notion",
+    "date": "2026-07-27",
+    "category": "product",
+    "event": "Added Enterprise Search connectors to index Google Drive, GitHub, and Jira directly within Notion",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Notion",
+    "date": "2026-08-03",
+    "category": "messaging",
+    "event": "Positioned Notion as the connected all-in-one workspace unifying docs, tasks, and knowledge",
+    "source": "Synthetic messaging update"
+  },
+  {
+    "competitor": "Notion",
+    "date": "2026-08-10",
+    "category": "product",
+    "event": "Launched Notion Custom Agents allowing teams to configure autonomous research and drafting bots",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Notion",
+    "date": "2026-08-16",
+    "category": "partnership",
+    "event": "Partnered with Figma and Loom for live interactive embeds and synced project boards",
+    "source": "Synthetic partnership announcement"
+  },
+  {
+    "competitor": "Notion",
+    "date": "2026-08-23",
+    "category": "packaging",
+    "event": "Included Notion Sites custom domain hosting and SEO controls in Plus tier",
+    "source": "Synthetic packaging update"
+  },
+  {
+    "competitor": "Notion",
+    "date": "2026-08-29",
+    "category": "hiring",
+    "event": "Recruited enterprise solutions architects and security compliance leads for European expansion",
+    "source": "Synthetic hiring update"
+  },
+  {
+    "competitor": "Notion",
+    "date": "2026-09-04",
+    "category": "product",
+    "event": "Introduced AI Meeting Notes with audio recording, transcription, and auto-generated action plans",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Notion",
+    "date": "2026-09-11",
+    "category": "pricing",
+    "event": "Created credit-based compute tier for heavy programmatic Notion API and autonomous agent queries",
+    "source": "Synthetic pricing page"
+  },
+  {
+    "competitor": "Notion",
+    "date": "2026-09-17",
+    "category": "enterprise",
+    "event": "Added SCIM provisioning, enterprise-grade SAML SSO, and data residency controls for EU customers",
+    "source": "Synthetic enterprise announcement"
+  },
+  {
+    "competitor": "Notion",
+    "date": "2026-09-23",
+    "category": "product",
+    "event": "Released Notion AI autofill database properties for automatic classification and sentiment scoring",
+    "source": "Synthetic product announcement"
+  },
+  {
+    "competitor": "Notion",
+    "date": "2026-09-28",
+    "category": "messaging",
+    "event": "Campaigned on replacing fragmented productivity tools with an intelligent single source of truth",
+    "source": "Synthetic messaging update"
   }
 ]

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <linearGradient id="cia-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#3730A3" />
+    </linearGradient>
+  </defs>
+  <!-- Outer Rounded Hexagon / Shield -->
+  <polygon 
+    points="24,3 43,14 43,34 24,45 5,34 5,14" 
+    fill="url(#cia-grad)" 
+    stroke="#6366F1" 
+    stroke-width="1.5" 
+    stroke-linejoin="round"
+  />
+  <!-- Inner Hexagonal Geometry / Memory Core -->
+  <polygon 
+    points="24,12 35,18.5 35,30.5 24,37 13,30.5 13,18.5" 
+    fill="none" 
+    stroke="#FFFFFF" 
+    stroke-width="2.5" 
+    stroke-linejoin="round"
+  />
+  <!-- Central Insight Memory Node -->
+  <circle cx="24" cy="24.5" r="3.5" fill="#38BDF8" />
+  <!-- Connecting Synapse Lines -->
+  <line x1="24" y1="12" x2="24" y2="21" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+  <line x1="13" y1="30.5" x2="21" y2="26" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+  <line x1="35" y1="30.5" x2="27" y2="26" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+</svg>

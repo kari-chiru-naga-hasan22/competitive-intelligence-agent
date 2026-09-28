@@ -2,7 +2,41 @@ import { NextResponse } from "next/server";
 import { generateGeminiContent } from "@/lib/gemini/client";
 import { getHindsightClient, buildMemoryContent } from "@/lib/hindsight";
 
+import competitorsData from "@/data/competitors.json";
+
 const BANK_ID = "competitive-intelligence";
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const competitor = searchParams.get("competitor");
+
+    if (competitor) {
+      const filtered = (competitorsData as Array<{ competitor: string; [key: string]: unknown }>).filter(
+        (e) => e.competitor.toLowerCase() === competitor.toLowerCase()
+      );
+      return NextResponse.json({
+        success: true,
+        count: filtered.length,
+        events: filtered,
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      count: (competitorsData as Array<unknown>).length,
+      events: competitorsData,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to fetch events",
+      },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(request: Request) {
   try {

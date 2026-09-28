@@ -16,31 +16,93 @@ export function getGeminiClient() {
   return client;
 }
 
+export function formatGeminiErrorMessage(error: unknown): string {
+  if (!error) return "Unknown AI service error";
+  const raw = error instanceof Error ? error.message : String(error);
+
+  try {
+    const parsed = typeof raw === "string" && raw.startsWith("{") ? JSON.parse(raw) : null;
+    if (parsed?.error) {
+      const code = parsed.error.code;
+      const status = parsed.error.status;
+      const message = parsed.error.message;
+
+      if (code === 503 || status === "UNAVAILABLE") {
+        return "The AI reasoning model is currently experiencing high demand. Please try again in a moment.";
+      }
+      if (code === 429 || status === "RESOURCE_EXHAUSTED") {
+        return "API rate limit reached. Please wait a few seconds and try again.";
+      }
+      if (message) {
+        return message;
+      }
+    }
+  } catch {
+    // ignore json parse error
+  }
+
+  if (raw.includes("503") || raw.includes("high demand") || raw.includes("UNAVAILABLE")) {
+    return "The AI reasoning model is currently experiencing high demand. Please try again in a moment.";
+  }
+  if (raw.includes("429") || raw.includes("quota") || raw.includes("RESOURCE_EXHAUSTED")) {
+    return "API rate limit reached. Please wait a few seconds and try again.";
+  }
+
+  return raw;
+}
+
 export async function generateGeminiContent(contents: string) {
   const ai = getGeminiClient();
 
+  // Prioritize active models with available quota and high throughput
   const models = [
-    "gemini-3.8-flash",
+    "gemini-3.1-flash-lite-preview",
+    "gemini-3.6-flash",
+    "gemini-3.1-flash-lite",
+    "gemma-4-26b-a4b-it",
+    "gemini-3.5-flash-lite",
+    "gemini-flash-lite-latest",
     "gemini-3.7-flash",
+    "gemini-3.8-flash",
+    "gemini-2.5-flash-lite",
   ];
 
   let lastError: unknown;
 
   for (const model of models) {
-    try {
-      console.log(`Trying Gemini model: ${model}`);
+    // Up to 2 attempts for transient 503 errors; 1 attempt for 429 (immediate failover to next model)
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        console.log(`[Gemini] Attempting model: ${model} (attempt ${attempt + 1})`);
 
-      return await ai.models.generateContent({
-        model,
-        contents,
-      });
-    } catch (error) {
-      lastError = error;
+        return await ai.models.generateContent({
+          model,
+          contents,
+        });
+      } catch (error: any) {
+        lastError = error;
+        const statusCode = error?.status || error?.statusCode || error?.status_code;
+        const msg = String(error?.message || error || "");
+        const is503 = statusCode === 503 || msg.includes("503") || msg.includes("UNAVAILABLE") || msg.includes("high demand");
+        const is429 = statusCode === 429 || msg.includes("429") || msg.includes("RESOURCE_EXHAUSTED");
 
-      console.warn(
-        `Gemini model ${model} failed:`,
-        error
-      );
+        console.warn(
+          `[Gemini] Model ${model} (attempt ${attempt + 1}) failed with status ${statusCode || "unknown"}:`,
+          error?.message || error
+        );
+
+        // For 429 quota exhaustion on this specific model, don't retry - immediately advance to next model
+        if (is429) {
+          break;
+        }
+
+        // For 503 transient spike on first attempt, pause briefly and retry once
+        if (is503 && attempt === 0) {
+          await new Promise((resolve) => setTimeout(resolve, 800));
+        } else {
+          break;
+        }
+      }
     }
   }
 
