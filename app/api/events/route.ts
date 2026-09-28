@@ -1,122 +1,128 @@
 import { NextResponse } from "next/server";
-import { generateGeminiContent } from "@/lib/gemini/client";
-import { getHindsightClient, buildMemoryContent } from "@/lib/hindsight";
+import { generateGeminiContent, extractJsonObject } from "@/lib/gemini/client";
+import { getHindsightClient, buildMemoryContent, isHindsightConfigured } from "@/lib/hindsight";
 
 const BANK_ID = "competitive-intelligence";
 
 export async function POST(request: Request) {
   try {
-    // 1. Read the incoming competitor event
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
 
-    const {
-      competitor,
-      event,
-      category,
-      source,
-      date,
-    } = body;
+    const targetCompetitor = (body.competitor || body.company || "").trim();
+    const rawEvent = (body.event || "").trim();
+    const category = (body.category || "product").trim();
+    const source = (body.source || "Public Documentation").trim();
+    const date = (body.date || new Date().toISOString().split("T")[0]).trim();
 
-    // 2. Validate required fields
-    if (!competitor || !event) {
+    // 1. Validate Input (Phase 16 Security)
+    if (!targetCompetitor) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "competitor and event are required",
-        },
+        { success: false, error: "Company name is required", code: "INVALID_INPUT" },
         { status: 400 }
       );
     }
 
-    // 3. Ask Gemini to normalize the event
-    const geminiResponse = await generateGeminiContent(`
-You are a competitive intelligence analyst.
-
-Normalize the following competitor event into concise structured intelligence.
-
-Competitor: ${competitor}
-Event: ${event}
-Category: ${category || "unknown"}
-Source: ${source || "unknown"}
-Date: ${date || new Date().toISOString().split("T")[0]}
-
-Return ONLY valid JSON with these fields:
-
-{
-  "competitor": string,
-  "category": string,
-  "event": string,
-  "strategic_signal": string,
-  "source": string,
-  "date": string
-}
-
-Do not invent facts that are not present in the input.
-`);
-
-    // 4. Get Gemini's response
-    const rawText = geminiResponse.text?.trim();
-
-    if (!rawText) {
-      throw new Error("Gemini returned an empty response");
+    if (!rawEvent) {
+      return NextResponse.json(
+        { success: false, error: "Event description is required", code: "INVALID_INPUT" },
+        { status: 400 }
+      );
     }
 
-    // 5. Remove markdown code fences if Gemini adds them
-    const cleanedText = rawText
-      .replace(/^```json\s*/i, "")
-      .replace(/^```\s*/i, "")
-      .replace(/\s*```$/i, "")
-      .trim();
+    if (targetCompetitor.length > 100 || rawEvent.length > 1500) {
+      return NextResponse.json(
+        { success: false, error: "Payload exceeds allowed character limits", code: "INVALID_INPUT" },
+        { status: 400 }
+      );
+    }
 
-    // 6. Convert Gemini response into an object
-    const intelligence = JSON.parse(cleanedText);
+    // 2. Check Hindsight
+    if (!isHindsightConfigured()) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Hindsight memory engine is not configured. Add HINDSIGHT_API_KEY to store persistent events.",
+          code: "HINDSIGHT_UNAVAILABLE",
+        },
+        { status: 503 }
+      );
+    }
 
-    // 7. Get Hindsight client
+    // 3. Optional Normalization with Gemini (if available)
+    let normalizedEvent = rawEvent;
+    let normalizedCategory = category;
+
+    try {
+      if (process.env.GEMINI_API_KEY) {
+        const geminiResponse = await generateGeminiContent(`
+Normalize this competitor event into clean structured intelligence.
+
+Company: ${targetCompetitor}
+Event: ${rawEvent}
+Category: ${category}
+Date: ${date}
+
+Return ONLY JSON:
+{
+  "event": "Concise factual statement of what occurred without subjective fluff",
+  "category": "product | pricing | messaging | enterprise | partnership | hiring"
+}`, { responseMimeType: "application/json" });
+
+        const parsed = extractJsonObject<{ event?: string; category?: string }>(geminiResponse.text || "");
+        if (parsed.event) normalizedEvent = parsed.event;
+        if (parsed.category) normalizedCategory = parsed.category;
+      }
+    } catch (normErr) {
+      console.warn("[events] Gemini event normalization bypassed:", normErr);
+      // Fallback to raw inputs
+    }
+
+    // 4. Retain in Hindsight
     const hindsight = getHindsightClient();
 
-    // 8. Make sure the memory bank exists
     try {
       await hindsight.createBank(BANK_ID, {
         name: "Competitive Intelligence",
         background:
-          "A memory bank for tracking competitor products, pricing, launches, hiring, messaging, and strategic changes over time.",
+          "Memory bank tracking competitor moves across pricing, product features, security, messaging, and leadership.",
       });
     } catch {
-      // Bank probably already exists.
-      // Continue without failing the request.
+      // Bank already created
     }
 
-    // 9. Build canonical memory content (Issue 5 fix)
     const memoryContent = buildMemoryContent({
-      competitor: intelligence.competitor,
-      category: intelligence.category,
-      event: intelligence.event,
-      source: intelligence.source,
-      date: intelligence.date,
+      competitor: targetCompetitor,
+      category: normalizedCategory,
+      event: normalizedEvent,
+      source,
+      date,
     });
 
-    // 10. Store the event in Hindsight
     await hindsight.retain(BANK_ID, memoryContent, {
       context: "competitive-intelligence-event",
-      timestamp: new Date(intelligence.date),
+      timestamp: new Date(date),
     });
 
-    // 11. Return the result
+    console.log(`[events] Ingested event for ${targetCompetitor}: "${normalizedEvent}"`);
+
     return NextResponse.json({
       success: true,
-      intelligence,
       stored: true,
+      event: {
+        competitor: targetCompetitor,
+        category: normalizedCategory,
+        event: normalizedEvent,
+        source,
+        date,
+      },
     });
   } catch (error) {
-    console.error("Event ingestion failed:", error);
-
+    console.error("[events] Ingestion failed:", error);
     return NextResponse.json(
       {
         success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error",
+        error: "Internal error storing competitor event",
+        code: (error as { code?: string })?.code || "INTERNAL_ERROR",
       },
       { status: 500 }
     );
