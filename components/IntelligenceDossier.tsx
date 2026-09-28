@@ -723,7 +723,7 @@ export function IntelligenceDossier({
       return "Together, these changes suggest Acme is broadening its appeal across both AI-driven workflows and enterprise requirements.";
     }
     if (isNimbus) {
-      return "Together, these changes indicate Nimbus is securing high-value enterprise accounts by prioritizing trusted governance and automated anomaly intelligence.";
+      return "Together, these changes indicate Nimbus is expanding its enterprise focus by prioritizing trusted governance and automated anomaly intelligence.";
     }
     if (isVertex) {
       return "Together, these changes indicate Vertex is capturing self-serve adoption while actively developing an enterprise sales motion.";
@@ -813,7 +813,7 @@ export function IntelligenceDossier({
         {
           num: "01",
           category: "ENTERPRISE",
-          text: "Watch for deeper ERP integrations and Fortune 500 retailer migrations.",
+          text: "Watch for deeper ERP integrations and enterprise retail expansion.",
         },
         {
           num: "02",
@@ -837,7 +837,7 @@ export function IntelligenceDossier({
         {
           num: "02",
           category: "ENTERPRISE",
-          text: "Watch for enterprise sales displacement campaigns targeting Salesforce.",
+          text: "Watch for enterprise marketing campaigns focused on CRM consolidation.",
         },
         {
           num: "03",
@@ -875,7 +875,7 @@ export function IntelligenceDossier({
         {
           num: "02",
           category: "AGENTS",
-          text: "Monitor enterprise adoption of autonomous Custom Agents for recurring workflows.",
+          text: "Monitor rollout of autonomous Custom Agents for recurring workflows.",
         },
         {
           num: "03",
@@ -1138,27 +1138,35 @@ export function IntelligenceDossier({
               )}
 
               {/* Memory Indicator Pill */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#EEF1FB] border border-[#DDE3F5] text-xs font-semibold text-[#4338F0]">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EEF1FB] border border-[#DDE3F5] text-xs font-semibold text-[#4338F0]">
                 <span className="pulse"></span>
-                <span>HINDSIGHT: {evidence.length} signals recalled</span>
+                <span>Hindsight memory &bull; {evidence.length} relevant observations recalled</span>
               </div>
             </div>
           </div>
 
           {/* Strategic Direction Headline & Supporting Narrative */}
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#4338F0] uppercase tracking-wider">
+              <span className="text-xs font-bold text-[#4338F0] uppercase tracking-wider flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#4338F0]"></span>
                 STRATEGIC DIRECTION DETECTED
               </span>
               <span className="syn sm:hidden">Synthetic CI dataset</span>
             </div>
 
-            <h3 className="text-xl sm:text-2xl lg:text-[26px] font-extrabold text-[#0B0D24] tracking-tight leading-snug font-sans">
+            <h3 className="text-2xl sm:text-3xl lg:text-[32px] font-extrabold text-[#0B0D24] tracking-[-0.02em] leading-snug font-sans">
               {cleanHeadline}
             </h3>
 
-            <p className="text-sm sm:text-base text-[#3F4463] font-normal leading-relaxed max-w-4xl">
+            {/* Persistent Memory Context Indicator */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#EEF1FB]/80 border border-[#DDE3F5] text-xs font-medium text-[#4338F0]">
+              <span className="font-bold uppercase tracking-wider text-[10px]">HINDSIGHT MEMORY</span>
+              <span className="text-[#7A7F99]">&bull;</span>
+              <span>{evidence.length} relevant observations recalled</span>
+            </div>
+
+            <p className="text-sm sm:text-base text-[#3F4463] font-normal leading-relaxed max-w-4xl pt-0.5">
               {supportingSummary}
             </p>
           </div>
@@ -1236,7 +1244,7 @@ export function IntelligenceDossier({
               PAST TRAJECTORY
             </h3>
             <p className="text-xs text-[#7A7F99]">
-              How the competitor&apos;s position changed over time.
+              What happened — recalled from persistent memory
             </p>
           </div>
 
@@ -1396,19 +1404,22 @@ export function IntelligenceDossier({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
-          {/* LEFT COLUMN: OBSERVED */}
+          {/* LEFT COLUMN: OBSERVED (Remembered Facts) */}
           <div className="gl p-6 rounded-2xl border border-[#DDE3F5] space-y-3.5 flex flex-col justify-between">
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="tagp o">OBSERVED</span>
-                <span className="text-xs text-[#7A7F99]">Dated changes from living memory</span>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="tagp o">OBSERVED</span>
+                  <span className="text-xs font-bold text-[#0d8f66] uppercase tracking-wider">Remembered Facts</span>
+                </div>
+                <span className="text-[11px] text-[#7A7F99]">Direct evidence</span>
               </div>
 
               <div className="space-y-2.5">
                 {observedFacts.map((fact, idx) => (
                   <div
                     key={idx}
-                    className="p-3.5 rounded-xl bg-white border border-[#DDE3F5] border-l-4 border-l-[#19C08B] text-xs sm:text-sm font-semibold text-[#0B0D24]"
+                    className="p-3.5 rounded-xl bg-white border border-[#DDE3F5] border-l-4 border-l-[#19C08B] text-xs sm:text-sm font-semibold text-[#0B0D24] shadow-xs"
                   >
                     {fact}
                   </div>
@@ -1417,16 +1428,19 @@ export function IntelligenceDossier({
             </div>
 
             <div className="pt-2 text-[11px] text-[#7A7F99] border-t border-[#EEF1FB]">
-              Verified historical signals tied to synthetic source records.
+              Facts directly supported by remembered events &amp; dated observations.
             </div>
           </div>
 
-          {/* RIGHT COLUMN: STRATEGIC SIGNAL */}
+          {/* RIGHT COLUMN: STRATEGIC SIGNAL (Cautious Interpretation) */}
           <div className="gl p-6 rounded-2xl border border-[#7C6BF5]/40 bg-gradient-to-br from-white via-white to-[#EDE8FF]/40 space-y-4 flex flex-col justify-between">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="tagp i">SIGNAL</span>
-                <span className="text-xs text-[#4338F0] font-semibold">Causal Interpretation</span>
+                <div className="flex items-center gap-2">
+                  <span className="tagp i">SIGNAL</span>
+                  <span className="text-xs font-bold text-[#4338F0] uppercase tracking-wider">Cautious Interpretation</span>
+                </div>
+                <span className="text-[11px] text-[#7C5CF0] font-semibold">Strategic synthesis</span>
               </div>
 
               <blockquote className="text-sm sm:text-base font-semibold text-[#0B0D24] leading-relaxed">
@@ -1440,7 +1454,7 @@ export function IntelligenceDossier({
                   EVIDENCE STRENGTH
                 </span>
                 <span className="text-xs text-[#3F4463]">
-                  Supported by 3+ related historical observations
+                  Supported by {Math.min(evidence.length, 3)}+ related historical observations
                 </span>
               </div>
 
@@ -1475,6 +1489,9 @@ export function IntelligenceDossier({
           >
             Every company gets a living intelligence profile.
           </h2>
+          <p className="text-xs sm:text-sm text-[#7A7F99]">
+            Everything the agent has learned about {competitor} over time.
+          </p>
         </div>
 
         <div className="dw">
@@ -1514,9 +1531,9 @@ export function IntelligenceDossier({
 
             {/* Two-Column Body: Category distribution & Grouped tags */}
             <div className="db">
-              {/* Left Column: Category distribution */}
+              {/* Left Column: What the agent remembers */}
               <div>
-                <h4>Category distribution</h4>
+                <h4>What the agent remembers</h4>
                 <div className="space-y-1">
                   {livingProfile.categoryDistribution.map((item) => (
                     <div key={item.category} className="bx">
@@ -1579,7 +1596,7 @@ export function IntelligenceDossier({
             WATCH NEXT
           </h3>
           <p className="text-xs text-[#7A7F99]">
-            Developments worth monitoring based on the current trajectory.
+            Monitor these areas based on the current trajectory.
           </p>
         </div>
 
@@ -1640,46 +1657,60 @@ export function IntelligenceDossier({
               EVIDENCE
             </h3>
             <p className="text-xs text-[#7A7F99]">
-              The observations behind this analysis.
+              The observations behind this intelligence.
             </p>
           </div>
           <span className="syn">Synthetic CI dataset</span>
         </div>
 
         <div className="gl rounded-2xl border border-[#DDE3F5] divide-y divide-[#EEF1FB] overflow-hidden">
-          {evidence.map((item, idx) => (
-            <div
-              key={idx}
-              className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-3 hover:bg-[#EEF1FB]/30 transition-colors"
-            >
-              <div className="sm:w-36 shrink-0 space-y-1">
-                <span className="text-xs font-extrabold text-[#0B0D24] uppercase tracking-wider block">
-                  {formatShortDate(item.date).toUpperCase()}
-                </span>
-                <span className="inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#EEF1FB] text-[#4338F0] border border-[#DDE3F5] uppercase">
-                  {item.category}
-                </span>
-              </div>
+          {evidence.map((item, idx) => {
+            const isTopEvidence = idx < 3;
+            return (
+              <div
+                key={idx}
+                className={`p-4 sm:p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-3 transition-colors ${
+                  isTopEvidence
+                    ? "bg-white border-l-4 border-l-[#4338F0] shadow-xs"
+                    : "bg-[#F7F9FF]/40 border-l-4 border-l-transparent hover:bg-[#EEF1FB]/30 opacity-90"
+                }`}
+              >
+                <div className="sm:w-36 shrink-0 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-extrabold text-[#0B0D24] uppercase tracking-wider block">
+                      {formatShortDate(item.date).toUpperCase()}
+                    </span>
+                    {isTopEvidence && (
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#EEF1FB] text-[#4338F0] border border-[#DDE3F5]">
+                        KEY
+                      </span>
+                    )}
+                  </div>
+                  <span className="inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#EEF1FB] text-[#4338F0] border border-[#DDE3F5] uppercase">
+                    {item.category}
+                  </span>
+                </div>
 
-              <div className="flex-1 space-y-1">
-                <h5 className="text-xs sm:text-sm font-extrabold text-[#0B0D24]">
-                  {getMilestoneShortTitle(item)}
-                </h5>
-                <p className="text-xs text-[#3F4463] leading-relaxed">
-                  {item.event}
-                </p>
-              </div>
+                <div className="flex-1 space-y-1">
+                  <h5 className={`text-xs sm:text-sm font-extrabold ${isTopEvidence ? "text-[#0B0D24]" : "text-[#2B304C]"}`}>
+                    {getMilestoneShortTitle(item)}
+                  </h5>
+                  <p className="text-xs text-[#3F4463] leading-relaxed">
+                    {item.event}
+                  </p>
+                </div>
 
-              <div className="sm:w-32 shrink-0 sm:text-right">
-                <span className="text-[11px] text-[#7A7F99] block font-medium">
-                  Source:
-                </span>
-                <span className="text-[11px] text-[#3F4463] font-semibold">
-                  {item.source || "Synthetic CI dataset"}
-                </span>
+                <div className="sm:w-32 shrink-0 sm:text-right">
+                  <span className="text-[11px] text-[#7A7F99] block font-medium">
+                    Source:
+                  </span>
+                  <span className="text-[11px] text-[#3F4463] font-semibold">
+                    {item.source || "Synthetic CI dataset"}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

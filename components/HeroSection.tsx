@@ -142,7 +142,7 @@ export function HeroSection({
   };
 
   return (
-    <section className="relative flex items-center justify-center py-4 sm:py-6 overflow-hidden border-b border-[#DDE3F5] bg-[#F7F9FF]">
+    <section className="relative flex items-center justify-center py-3 sm:py-4.5 overflow-hidden border-b border-[#DDE3F5] bg-[#F7F9FF]">
       {/* 🌌 Ambient Pastel Radiance from index1.html */}
       <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden">
         {/* Soft violet radial blur on right */}
@@ -153,10 +153,10 @@ export function HeroSection({
 
       <div className="max-w-[1200px] w-full mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
         {/* 2-Column Responsive Layout: Left Controls (55%) + Right Floating Process Visual (45%) */}
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8 xl:gap-12">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-5 lg:gap-6 xl:gap-8">
           
           {/* ── LEFT COLUMN: EDITORIAL HEADLINE & INTELLIGENCE CONSOLE ── */}
-          <div className="w-full lg:w-[54%] xl:w-[55%] max-w-2xl mx-auto lg:mx-0 flex flex-col space-y-3.5 text-left">
+          <div className="w-full lg:w-[54%] xl:w-[55%] max-w-2xl mx-auto lg:mx-0 flex flex-col space-y-2.5 sm:space-y-3 text-left">
             
             {/* Tag / Eyebrow */}
             <div className="flex flex-wrap items-center gap-2">
@@ -186,14 +186,14 @@ export function HeroSection({
             {/* Interactive Research Console with Libraries.dev BorderBeam */}
             <BorderBeam
               size="md"
-              colorVariant="colorful"
-              strength={0.6}
+              colorVariant="ocean"
+              strength={0.5}
               theme="light"
               borderRadius={24}
               active={!prefersReducedMotion}
               className="w-full"
             >
-              <div className="gl p-3.5 sm:p-4 shadow-[0_16px_36px_rgba(80,90,220,0.09)] space-y-2.5">
+              <div className="gl p-3 sm:p-3.5 shadow-[0_16px_36px_rgba(80,90,220,0.08)] space-y-2">
                 
                 {/* 1. Target Selector Header */}
                 <div className="flex items-center justify-between">

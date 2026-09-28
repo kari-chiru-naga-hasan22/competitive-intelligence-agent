@@ -106,10 +106,10 @@ export function IntelligenceProcessVisual() {
   return (
     <div 
       ref={stageRef}
-      className="relative w-full max-w-[420px] sm:max-w-[450px] lg:max-w-[380px] xl:max-w-[440px] 2xl:max-w-[480px] h-[240px] xs:h-[265px] sm:h-[300px] md:h-[330px] lg:h-[320px] xl:h-[350px] 2xl:h-[380px] flex items-center justify-center lg:justify-end select-none overflow-visible"
+      className="relative w-full max-w-[430px] sm:max-w-[460px] lg:max-w-[390px] xl:max-w-[450px] 2xl:max-w-[490px] h-[250px] xs:h-[275px] sm:h-[310px] md:h-[340px] lg:h-[330px] xl:h-[365px] 2xl:h-[395px] flex items-center justify-center lg:justify-end select-none overflow-visible"
     >
-      {/* Scaled Visual Stage — Index1 Light Glass Palette */}
-      <div className="relative w-[840px] h-[660px] scale-[0.32] xs:scale-[0.35] sm:scale-[0.40] md:scale-[0.44] lg:scale-[0.42] xl:scale-[0.48] 2xl:scale-[0.52] origin-center lg:origin-right flex-shrink-0">
+      {/* Scaled Visual Stage — Index1 Light Glass Palette (approx 20-25% larger cards) */}
+      <div className="relative w-[840px] h-[660px] scale-[0.39] xs:scale-[0.43] sm:scale-[0.48] md:scale-[0.53] lg:scale-[0.52] xl:scale-[0.58] 2xl:scale-[0.63] origin-center lg:origin-right flex-shrink-0">
         
         <div 
           ref={stackRef} 
@@ -202,7 +202,7 @@ export function IntelligenceProcessVisual() {
                       STAGE 1 &bull; DISCOVER
                     </small>
                     <b className="text-[#0B0D24] font-heading text-[21px] font-extrabold tracking-[-0.015em] leading-snug whitespace-nowrap">
-                      Signals Found
+                      Signal Found
                     </b>
                     <em className="text-[#7A7F99] not-italic text-[14px] font-normal mt-0.5">
                       27 competitor signals
