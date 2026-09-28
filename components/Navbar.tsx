@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 interface NavbarProps {
   activeTab: "dashboard" | "competitors" | "insights";
   onTabChange: (tab: "dashboard" | "competitors" | "insights") => void;
@@ -8,9 +10,28 @@ interface NavbarProps {
 }
 
 export function Navbar({ activeTab, onTabChange, onOpenSettings, onOpenAddEvent }: NavbarProps) {
+  const [uiScale, setUiScale] = useState<"compact" | "normal" | "large">("normal");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("cia-ui-scale") as "compact" | "normal" | "large" | null;
+      if (saved) {
+        setUiScale(saved);
+        document.documentElement.setAttribute("data-ui-scale", saved);
+      }
+    }
+  }, []);
+
+  const handleToggleScale = () => {
+    const next = uiScale === "normal" ? "compact" : uiScale === "compact" ? "large" : "normal";
+    setUiScale(next);
+    document.documentElement.setAttribute("data-ui-scale", next);
+    localStorage.setItem("cia-ui-scale", next);
+  };
+
   return (
     <header className="sticky top-0 z-40 h-[58px] bg-[rgba(247,249,255,0.85)] backdrop-blur-xl border-b border-[#DDE3F5] transition-all">
-      <div className="max-w-[1360px] mx-auto h-full px-4 sm:px-8 lg:px-12 flex items-center justify-between">
+      <div className="max-w-[1200px] mx-auto h-full px-4 sm:px-8 lg:px-12 flex items-center justify-between">
         
         {/* Brand: CIA Agent with Hindsight Visual Styling */}
         <div 
@@ -105,6 +126,19 @@ export function Navbar({ activeTab, onTabChange, onOpenSettings, onOpenAddEvent 
               <span>+ Log Event</span>
             </button>
           )}
+
+          {/* UI Scale / Density Selector */}
+          <button
+            type="button"
+            onClick={handleToggleScale}
+            title={`Display Scale: ${uiScale === "compact" ? "85% (Ultra-Compact)" : uiScale === "normal" ? "90% (Standard)" : "100% (Large)"} - Click to cycle`}
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border border-[#DDE3F5] bg-white hover:bg-[#EEF1FB] hover:border-[#4338F0]/40 text-[#3F4463] hover:text-[#4338F0] transition-all cursor-pointer shadow-xs active:scale-95"
+          >
+            <span className="text-[10px] text-[#7A7F99] font-mono font-bold">SCALE</span>
+            <span className="text-xs font-bold text-[#4338F0]">
+              {uiScale === "compact" ? "85%" : uiScale === "normal" ? "90%" : "100%"}
+            </span>
+          </button>
 
           {/* Settings / Config Button */}
           <button

@@ -106,10 +106,10 @@ export function IntelligenceProcessVisual() {
   return (
     <div 
       ref={stageRef}
-      className="relative w-full max-w-[440px] sm:max-w-[470px] lg:max-w-[400px] xl:max-w-[470px] 2xl:max-w-[520px] h-[255px] xs:h-[285px] sm:h-[330px] md:h-[360px] lg:h-[350px] xl:h-[400px] 2xl:h-[440px] flex items-center justify-center lg:justify-end select-none overflow-visible"
+      className="relative w-full max-w-[420px] sm:max-w-[450px] lg:max-w-[380px] xl:max-w-[440px] 2xl:max-w-[480px] h-[240px] xs:h-[265px] sm:h-[300px] md:h-[330px] lg:h-[320px] xl:h-[350px] 2xl:h-[380px] flex items-center justify-center lg:justify-end select-none overflow-visible"
     >
       {/* Scaled Visual Stage — Index1 Light Glass Palette */}
-      <div className="relative w-[840px] h-[660px] scale-[0.34] xs:scale-[0.38] sm:scale-[0.45] md:scale-[0.50] lg:scale-[0.45] xl:scale-[0.54] 2xl:scale-[0.60] origin-center lg:origin-right flex-shrink-0">
+      <div className="relative w-[840px] h-[660px] scale-[0.32] xs:scale-[0.35] sm:scale-[0.40] md:scale-[0.44] lg:scale-[0.42] xl:scale-[0.48] 2xl:scale-[0.52] origin-center lg:origin-right flex-shrink-0">
         
         <div 
           ref={stackRef} 

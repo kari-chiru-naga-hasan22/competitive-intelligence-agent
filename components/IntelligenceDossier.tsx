@@ -1097,7 +1097,7 @@ export function IntelligenceDossier({
   const activeEvent = trajectoryEvents[selectedMilestone] || trajectoryEvents[0];
 
   return (
-    <div className="space-y-8 sm:space-y-10 animate-in fade-in duration-300 w-full max-w-[1360px] mx-auto">
+    <div className="space-y-8 sm:space-y-10 animate-in fade-in duration-300 w-full max-w-[1200px] mx-auto">
       
       {/* ──────────────────────────────────────────────────────────────
           SECTION 2 — STRATEGIC INTELLIGENCE

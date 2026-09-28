@@ -133,7 +133,7 @@ export default function Home() {
             <main
               ref={resultsRef}
               id="intelligence-results"
-              className="flex-1 max-w-[1360px] w-full mx-auto px-4 sm:px-8 lg:px-12 py-10 pb-24 space-y-10 scroll-mt-6 animate-in fade-in duration-500"
+              className="flex-1 max-w-[1200px] w-full mx-auto px-4 sm:px-8 lg:px-12 py-10 pb-24 space-y-10 scroll-mt-6 animate-in fade-in duration-500"
             >
               {/* Error Banner with Retry Action */}
               {errorMsg && (
@@ -188,7 +188,7 @@ export default function Home() {
 
       {/* TAB 2: COMPETITORS */}
       {activeTab === "competitors" && (
-        <main className="flex-1 max-w-[1360px] w-full mx-auto px-4 sm:px-8 lg:px-12 py-8 pb-24">
+        <main className="flex-1 max-w-[1200px] w-full mx-auto px-4 sm:px-8 lg:px-12 py-8 pb-24">
           <CompetitorsView
             onSelectCompetitor={handleSelectFromCompetitorsView}
             onOpenAddEvent={() => setIsAddEventOpen(true)}
@@ -198,7 +198,7 @@ export default function Home() {
 
       {/* TAB 3: INSIGHTS */}
       {activeTab === "insights" && (
-        <main className="flex-1 max-w-[1360px] w-full mx-auto px-4 sm:px-8 lg:px-12 py-8 pb-24">
+        <main className="flex-1 max-w-[1200px] w-full mx-auto px-4 sm:px-8 lg:px-12 py-8 pb-24">
           <InsightsView onAnalyzeCompetitor={handleSelectFromInsightsView} />
         </main>
       )}
@@ -218,7 +218,7 @@ export default function Home() {
 
       {/* Footer from index1.html */}
       <footer className="ft mt-auto">
-        <div className="max-w-[1360px] mx-auto px-4 sm:px-8 lg:px-12">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-8 lg:px-12">
           <div className="ftg flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-1 text-center md:text-left">
               <div className="flex items-center justify-center md:justify-start gap-2.5">

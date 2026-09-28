@@ -151,7 +151,7 @@ export function HeroSection({
         <div className="absolute left-[-5%] top-1/3 w-[460px] h-[460px] bg-radial from-[rgba(206,214,255,0.45)] via-[rgba(226,233,255,0.2)] to-transparent rounded-full blur-3xl pointer-events-none" />
       </div>
 
-      <div className="max-w-[1360px] w-full mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
+      <div className="max-w-[1200px] w-full mx-auto px-4 sm:px-8 lg:px-12 relative z-10">
         {/* 2-Column Responsive Layout: Left Controls (55%) + Right Floating Process Visual (45%) */}
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8 xl:gap-12">
           

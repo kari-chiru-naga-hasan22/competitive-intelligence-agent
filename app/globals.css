@@ -28,12 +28,25 @@
 }
 
 html {
-  font-size: 14.5px; /* Clean proportional scaling across all rem units without breaking coordinate systems */
+  font-size: 13.8px; /* Default ~86% compact scaling across all rem units */
+  -webkit-text-size-adjust: 100%;
+}
+
+html[data-ui-scale="compact"] {
+  font-size: 12.6px; /* Ultra-compact ~79% */
+}
+
+html[data-ui-scale="normal"] {
+  font-size: 13.8px; /* Default compact ~86% */
+}
+
+html[data-ui-scale="large"] {
+  font-size: 15.5px; /* Standard ~97% */
 }
 
 @media (max-width: 768px) {
   html {
-    font-size: 14px;
+    font-size: 13.5px;
   }
 }
 
