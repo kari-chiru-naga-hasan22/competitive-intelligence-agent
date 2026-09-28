@@ -4,23 +4,26 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
 import { IntelligenceDossier } from "@/components/IntelligenceDossier";
-import { CompetitorsView } from "@/components/CompetitorsView";
+import { HistoryView } from "@/components/HistoryView";
 import { InsightsView } from "@/components/InsightsView";
 import { AddEventModal } from "@/components/AddEventModal";
 import { SettingsModal } from "@/components/SettingsModal";
 import { LoadingState } from "@/components/LoadingState";
-import { analyzeCompetitor, IntelligenceResponse } from "@/lib/api";
+import {
+  analyzeCompetitor,
+  IntelligenceResponse,
+  HistoryItem,
+  SEEDED_ARCHIVES,
+} from "@/lib/api";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"dashboard" | "competitors" | "insights">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "history" | "insights">("dashboard");
   const [competitor, setCompetitor] = useState("Acme Cloud");
-  const [question, setQuestion] = useState(
-    "What changed in their strategy?"
-  );
+  const [question, setQuestion] = useState("What changed in their strategy?");
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<IntelligenceResponse | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<{ message: string; code?: string } | null>(null);
 
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -29,21 +32,24 @@ export default function Home() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const runAnalysis = useCallback(
-    async (targetComp: string, targetQuestion: string) => {
+    async (targetComp: string, targetQuestion: string, forceSeeded = false) => {
       setLoading(true);
       setErrorMsg(null);
       setResult(null); // Immediately clear previous response so old company data never lingers
       setHasSubmitted(true);
       try {
-        const data = await analyzeCompetitor(targetComp, targetQuestion);
+        const data = await analyzeCompetitor(targetComp, targetQuestion, {
+          forceSeededArchive: forceSeeded,
+        });
         setResult(data);
       } catch (err: unknown) {
-        console.error("Analysis failed:", err);
-        setErrorMsg(
+        console.error("Analysis request failed:", err);
+        const code = (err as { code?: string })?.code;
+        const msg =
           err instanceof Error
             ? err.message
-            : "An unexpected error occurred during synthesis."
-        );
+            : "An unexpected error occurred during synthesis.";
+        setErrorMsg({ message: msg, code });
       } finally {
         setLoading(false);
       }
@@ -85,12 +91,12 @@ export default function Home() {
     runAnalysis(competitor, question);
   };
 
-  const handleSelectFromCompetitorsView = (newComp: string) => {
-    setCompetitor(newComp);
-    const defaultQ = `What changed in their strategy?`;
-    setQuestion(defaultQ);
+  const handleSelectFromHistory = (item: HistoryItem) => {
+    setCompetitor(item.competitor);
+    setQuestion(item.question);
+    setResult(item.response);
+    setHasSubmitted(true);
     setActiveTab("dashboard");
-    runAnalysis(newComp, defaultQ);
   };
 
   const handleSelectFromInsightsView = (newComp: string, promptQ: string) => {
@@ -98,6 +104,14 @@ export default function Home() {
     setQuestion(promptQ);
     setActiveTab("dashboard");
     runAnalysis(newComp, promptQ);
+  };
+
+  const handleLoadSeededArchive = (targetComp: string) => {
+    setCompetitor(targetComp);
+    const defaultQ = SEEDED_ARCHIVES[targetComp]?.question || `What changed in ${targetComp}'s strategy?`;
+    setQuestion(defaultQ);
+    setActiveTab("dashboard");
+    runAnalysis(targetComp, defaultQ, true);
   };
 
   const handleEventAdded = (targetComp: string) => {
@@ -178,6 +192,9 @@ export default function Home() {
                     observedChanges={result.insight.observed_changes}
                     watchNext={result.insight.watch_next}
                     evidence={result.evidence}
+                    status={result.status}
+                    confidence={result.insight.confidence}
+                    hasPriorObservation={result.hasPriorObservation}
                   />
                 </div>
               )}

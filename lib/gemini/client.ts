@@ -2,14 +2,17 @@ import { GoogleGenAI } from "@google/genai";
 
 let client: GoogleGenAI | null = null;
 
-export function getGeminiClient() {
+export function getGeminiClient(): GoogleGenAI {
   if (!client) {
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error("GEMINI_API_KEY is not configured");
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey.trim() === "") {
+      const err = new Error("GEMINI_API_KEY is not configured");
+      (err as { code?: string }).code = "GEMINI_UNAVAILABLE";
+      throw err;
     }
 
     client = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
+      apiKey: apiKey.trim(),
     });
   }
 
@@ -53,6 +56,7 @@ export function formatGeminiErrorMessage(error: unknown): string {
 
 export async function generateGeminiContent(contents: string) {
   const ai = getGeminiClient();
+  const model = getGeminiModel();
 
   // Prioritize active models with available quota and high throughput
   const models = [
@@ -104,9 +108,48 @@ export async function generateGeminiContent(contents: string) {
         }
       }
     }
+
+    const response = await ai.models.generateContent({
+      model,
+      contents,
+      config: Object.keys(config).length > 0 ? config : undefined,
+    });
+
+    return response;
+  } catch (error) {
+    console.error(`[Gemini] Generation failed with model ${model}:`, error instanceof Error ? error.message : error);
+    const failureErr = error instanceof Error ? error : new Error(`Gemini model ${model} failed`);
+    (failureErr as { code?: string }).code = "GEMINI_UNAVAILABLE";
+    throw failureErr;
+  }
+}
+
+/**
+ * Robust JSON extraction helper that parses JSON objects even when surrounded by markdown fences or conversational preambles
+ */
+export function extractJsonObject<T = unknown>(raw: string): T {
+  if (!raw || typeof raw !== "string") {
+    throw new Error("Empty or non-string response to extract JSON from");
   }
 
-  throw lastError instanceof Error
-    ? lastError
-    : new Error("All Gemini models failed");
+  const trimmed = raw.trim();
+
+  // Try direct parse first
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    // Continue to regex extraction
+  }
+
+  // Match outermost curly braces
+  const match = trimmed.match(/\{[\s\S]*\}/);
+  if (!match) {
+    throw new Error("No JSON object found in response");
+  }
+
+  try {
+    return JSON.parse(match[0]);
+  } catch (err) {
+    throw new Error(`Failed to parse extracted JSON object: ${err instanceof Error ? err.message : String(err)}`);
+  }
 }

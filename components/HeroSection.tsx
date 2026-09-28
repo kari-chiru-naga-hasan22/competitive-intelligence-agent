@@ -30,6 +30,50 @@ const SUGGESTIONS = [
   "What should we watch next?",
 ];
 
+const MEMORY_PIPELINE = [
+  {
+    day: "Day 1",
+    title: "Initial Research",
+    detail: "27 market signals indexed",
+    icon: (
+      <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+    ),
+  },
+  {
+    day: "Day 2",
+    title: "New Updates",
+    detail: "3 market shifts detected",
+    icon: (
+      <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
+    day: "Day 3",
+    title: "Strategy Analysis",
+    detail: "Competitor intent inferred",
+    icon: (
+      <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+  },
+  {
+    day: "Ongoing",
+    title: "Continuous Monitoring",
+    detail: "Persistent memory active",
+    active: true,
+    icon: (
+      <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    ),
+  },
+];
+
 export function HeroSection({
   competitor,
   onCompetitorChange,
@@ -86,6 +130,7 @@ export function HeroSection({
     onCompetitorChange(name);
     onQuestionChange(defaultQ);
     setDropdownOpen(false);
+    setCustomInput("");
   };
 
   const handleChipClick = (chipText: string) => {
@@ -100,6 +145,12 @@ export function HeroSection({
         onAnalyze();
       }
     }
+  };
+
+  const handleApplyCustom = () => {
+    const trimmed = customInput.trim();
+    if (!trimmed) return;
+    handleSelect(trimmed, `What changed in ${trimmed}'s strategy?`);
   };
 
   return (
@@ -364,3 +415,4 @@ export function HeroSection({
     </section>
   );
 }
+

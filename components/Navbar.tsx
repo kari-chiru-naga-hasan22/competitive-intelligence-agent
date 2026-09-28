@@ -1,8 +1,8 @@
 "use client";
 
 interface NavbarProps {
-  activeTab: "dashboard" | "competitors" | "insights";
-  onTabChange: (tab: "dashboard" | "competitors" | "insights") => void;
+  activeTab: "dashboard" | "history" | "insights";
+  onTabChange: (tab: "dashboard" | "history" | "insights") => void;
   onOpenSettings: () => void;
   onOpenAddEvent?: () => void;
 }

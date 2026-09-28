@@ -2,6 +2,17 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { IntelligenceEvidence } from "@/lib/api";
+import {
+  computeSignalBreakdown,
+  computeTrajectorySeries,
+  computeStrategicShifts,
+  computeBusinessModelMovement,
+  computeStrategicMomentum,
+  computeEvidenceQuality,
+  structureWatchpoints,
+  deriveInference,
+  formatReportDate,
+} from "@/lib/reportAnalytics";
 
 interface IntelligenceDossierProps {
   competitor: string;
@@ -143,9 +154,12 @@ export function IntelligenceDossier({
   question,
   summary,
   strategicSignal,
-  observedChanges,
-  watchNext,
-  evidence,
+  observedChanges = [],
+  watchNext = [],
+  evidence = [],
+  status = "LIVE",
+  confidence,
+  hasPriorObservation = false,
 }: IntelligenceDossierProps) {
   // Timeline state
   const [selectedMilestone, setSelectedMilestone] = useState<number>(0);
@@ -157,14 +171,8 @@ export function IntelligenceDossier({
   const trajectoryRef = useRef<HTMLDivElement>(null);
   const pauseTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Interactive alert creation state
-  const [alertSetIndices, setAlertSetIndices] = useState<Record<number, boolean>>({});
-
-  const toggleAlert = (idx: number) => {
-    setAlertSetIndices((prev) => ({
-      ...prev,
-      [idx]: !prev[idx],
-    }));
+  const toggleAlert = (id: string) => {
+    setAlerts((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   // Detect user preference for reduced motion
