@@ -1470,7 +1470,7 @@ export function IntelligenceDossier({
       {/* ──────────────────────────────────────────────────────────────
           SECTION 6 — LIVING COMPANY MEMORY (INDEX1 LIVING INTELLIGENCE PROFILE)
       ────────────────────────────────────────────────────────────── */}
-      <section className="relative space-y-4 pt-4" aria-labelledby="living-memory-heading">
+      <section className="relative space-y-2 pt-2 scroll-mt-6" aria-labelledby="living-memory-heading">
         {/* Soft Ambient Glow */}
         <div
           className="absolute -right-12 -bottom-10 w-96 h-80 rounded-full pointer-events-none -z-10"
@@ -1478,18 +1478,18 @@ export function IntelligenceDossier({
           aria-hidden="true"
         />
 
-        <div className="space-y-1">
-          <span className="eb">
+        <div className="space-y-0.5">
+          <span className="eb text-xs">
             <i />
             Living company memory
           </span>
           <h2
             id="living-memory-heading"
-            className="text-xl sm:text-2xl font-extrabold text-[#0B0D24] tracking-tight font-heading mt-1"
+            className="text-lg sm:text-xl font-extrabold text-[#0B0D24] tracking-tight font-heading mt-0.5"
           >
             Every company gets a living intelligence profile.
           </h2>
-          <p className="text-xs sm:text-sm text-[#7A7F99]">
+          <p className="text-xs text-[#7A7F99]">
             Everything the agent has learned about {competitor} over time.
           </p>
         </div>
