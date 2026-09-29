@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Navbar } from "@/components/Navbar";
-import { HeroSection } from "@/components/HeroSection";
+import { HeroSection, AttachedDoc } from "@/components/HeroSection";
 import { IntelligenceDossier } from "@/components/IntelligenceDossier";
+import { AgentActivity } from "@/components/AgentActivity";
 import { HistoryView } from "@/components/HistoryView";
 import { InsightsView } from "@/components/InsightsView";
 import { AddEventModal } from "@/components/AddEventModal";
@@ -25,20 +26,44 @@ export default function Home() {
   const [result, setResult] = useState<IntelligenceResponse | null>(null);
   const [errorMsg, setErrorMsg] = useState<{ message: string; code?: string } | null>(null);
 
+  // Agent Context Inputs
+  const [attachments, setAttachments] = useState<AttachedDoc[]>([]);
+  const [enableWebSearch, setEnableWebSearch] = useState(false);
+
   const resultsRef = useRef<HTMLDivElement>(null);
 
   // Modals state
   const [isAddEventOpen, setIsAddEventOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+  const handleAddAttachment = (doc: AttachedDoc) => {
+    setAttachments((prev) => [...prev, doc]);
+  };
+
+  const handleRemoveAttachment = (id: string) => {
+    setAttachments((prev) => prev.filter((d) => d.id !== id));
+  };
+
   const runAnalysis = useCallback(
-    async (targetComp: string, targetQuestion: string, forceSeeded = false) => {
+    async (
+      targetComp: string,
+      targetQuestion: string,
+      forceSeeded = false,
+      targetAttachments = attachments,
+      targetWebSearch = enableWebSearch
+    ) => {
       setLoading(true);
       setErrorMsg(null);
       setHasSubmitted(true);
       try {
         const data = await analyzeCompetitor(targetComp, targetQuestion, {
           forceSeededArchive: forceSeeded,
+          attachments: targetAttachments.map((a) => ({
+            id: a.id,
+            name: a.name,
+          })),
+          fileIds: targetAttachments.map((a) => a.id),
+          enableWebSearch: targetWebSearch,
         });
         setResult(data);
       } catch (err: unknown) {
@@ -53,7 +78,7 @@ export default function Home() {
         setLoading(false);
       }
     },
-    []
+    [attachments, enableWebSearch]
   );
 
   // Auto-scroll to results after analysis
@@ -131,7 +156,7 @@ export default function Home() {
       {/* Main Content Body */}
       {activeTab === "dashboard" && (
         <>
-          {/* SECTION 2 & 3: Hero Section with Centered Chatbox */}
+          {/* SECTION 2 & 3: Hero Section with Centered Chatbox & Agent Workspace */}
           <HeroSection
             competitor={competitor}
             onCompetitorChange={handleCompetitorChange}
@@ -139,6 +164,11 @@ export default function Home() {
             onQuestionChange={handleQuestionChange}
             onAnalyze={handleAnalyze}
             loading={loading}
+            attachments={attachments}
+            onAddAttachment={handleAddAttachment}
+            onRemoveAttachment={handleRemoveAttachment}
+            enableWebSearch={enableWebSearch}
+            onToggleWebSearch={setEnableWebSearch}
           />
 
           {/* SECTION 4: Intelligence Results (Shown ONLY AFTER user submits question) */}
@@ -176,8 +206,18 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Loading Indicator */}
-              {loading && <LoadingState competitor={competitor} />}
+              {/* Agent Active Thinking & Loading State */}
+              {loading && (
+                <div className="space-y-6">
+                  <AgentActivity
+                    competitor={competitor}
+                    files={attachments}
+                    isComplete={false}
+                    enableWebSearch={enableWebSearch}
+                  />
+                  <LoadingState competitor={competitor} />
+                </div>
+              )}
 
               {/* Live Intelligence Output */}
               {result && !loading && (
@@ -193,6 +233,8 @@ export default function Home() {
                     status={result.status}
                     confidence={result.insight.confidence}
                     hasPriorObservation={result.hasPriorObservation}
+                    attachments={attachments}
+                    agentExecution={result.agentExecution}
                   />
                 </div>
               )}

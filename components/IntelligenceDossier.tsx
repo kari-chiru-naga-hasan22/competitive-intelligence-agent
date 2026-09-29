@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useId } from "react";
-import { IntelligenceEvidence } from "@/lib/api";
+import { IntelligenceEvidence, downloadDocxReport } from "@/lib/api";
+import { AgentActivity } from "./AgentActivity";
 import {
   computeSignalBreakdown,
   computeTrajectorySeries,
@@ -22,9 +23,16 @@ interface IntelligenceDossierProps {
   observedChanges: string[];
   watchNext: string[];
   evidence: IntelligenceEvidence[];
-  status?: "LIVE" | "SEEDED" | "NO_EVIDENCE" | "ERROR";
+  status?: "LIVE" | "LIVE_SEARCH" | "SEEDED" | "NO_EVIDENCE" | "ERROR";
   confidence?: number;
   hasPriorObservation?: boolean;
+  attachments?: Array<{ name: string }>;
+  agentExecution?: {
+    steps: string[];
+    durationMs: number;
+    webReconPerformed?: boolean;
+    webSourceSummary?: string;
+  };
 }
 
 export function IntelligenceDossier({
@@ -38,6 +46,8 @@ export function IntelligenceDossier({
   status = "LIVE",
   confidence,
   hasPriorObservation = false,
+  attachments = [],
+  agentExecution,
 }: IntelligenceDossierProps) {
   // Unique Analysis ID
   const analysisId = "CIA-" + (Math.abs(competitor.split("").reduce((acc, c) => acc + c.charCodeAt(0), 48)) % 900 + 100).toString().padStart(4, "0");
@@ -50,9 +60,50 @@ export function IntelligenceDossier({
   // Interactive alert toggles
   const [alerts, setAlerts] = useState<Record<string, boolean>>({});
 
+  // DOCX Export state
+  const [isExporting, setIsExporting] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [exportSuccess, setExportSuccess] = useState(false);
+
   const toggleAlert = (id: string) => {
     setAlerts((prev) => ({ ...prev, [id]: !prev[id] }));
   };
+
+  const handleExportDocx = async () => {
+    setIsExporting(true);
+    setExportSuccess(false);
+    try {
+      await downloadDocxReport({
+        success: true,
+        status: status === "LIVE_SEARCH" ? "LIVE" : status,
+        competitor,
+        question,
+        insight: {
+          summary,
+          observed_changes: observedChanges,
+          strategic_signal: strategicSignal,
+          watch_next: watchNext,
+          confidence,
+        },
+        evidence,
+      });
+      setExportSuccess(true);
+      setTimeout(() => setExportSuccess(false), 4000);
+    } catch (err) {
+      console.error("DOCX download failed:", err);
+      alert("Failed to export Word document. Please try again.");
+    } finally {
+      setIsExporting(false);
+      setShowExportMenu(false);
+    }
+  };
+
+  // Check if user inquiry requested document output
+  const isDocRequested =
+    question.toLowerCase().includes("doc") ||
+    question.toLowerCase().includes("word") ||
+    question.toLowerCase().includes("export") ||
+    question.toLowerCase().includes("report format");
 
   // Compute Analytics Data
   const breakdown = computeSignalBreakdown(evidence);
@@ -96,13 +147,63 @@ export function IntelligenceDossier({
             </p>
           </div>
 
-          <div className="flex flex-col sm:items-end gap-1.5 text-xs font-mono">
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 uppercase tracking-wider">ANALYSIS ID</span>
-              <span className="font-semibold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                #{analysisId}
-              </span>
+          <div className="flex flex-col sm:items-end gap-2.5 text-xs font-mono">
+            <div className="flex items-center gap-3">
+              {/* DOCX Export Action Button */}
+              <div className="relative">
+                <button
+                  type="button"
+                  disabled={isExporting}
+                  onClick={() => setShowExportMenu(!showExportMenu)}
+                  className="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-black text-white text-xs font-mono font-semibold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  <span>{isExporting ? "Exporting..." : "↓ Export Report"}</span>
+                  <span className="text-[10px]">▼</span>
+                </button>
+
+                {showExportMenu && (
+                  <>
+                    <div className="fixed inset-0 z-20" onClick={() => setShowExportMenu(false)} />
+                    <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-xl shadow-xl border border-slate-200 py-1 z-30 font-sans text-xs divide-y divide-slate-100">
+                      <button
+                        type="button"
+                        onClick={handleExportDocx}
+                        className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-slate-800 font-medium cursor-pointer"
+                      >
+                        <span className="text-base">📄</span>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-slate-900">Word Document</span>
+                          <span className="text-[10px] text-slate-500 font-mono">.docx format with tables</span>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowExportMenu(false);
+                          window.print();
+                        }}
+                        className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-slate-800 font-medium cursor-pointer"
+                      >
+                        <span className="text-base">🖨️</span>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-slate-900">Print / Save PDF</span>
+                          <span className="text-[10px] text-slate-500 font-mono">Clean browser print layout</span>
+                        </div>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Analysis ID Badge */}
+              <div className="flex items-center gap-2">
+                <span className="text-slate-400 uppercase tracking-wider">ANALYSIS ID</span>
+                <span className="font-semibold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                  #{analysisId}
+                </span>
+              </div>
             </div>
+
             <div className="text-slate-500">
               Last analyzed: <span className="text-slate-800 font-medium">{currentDate} · 19:42</span>
             </div>
@@ -113,13 +214,23 @@ export function IntelligenceDossier({
         <div className="flex items-center flex-wrap gap-2.5 mt-5 pt-4 border-t border-slate-100">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold tracking-wider uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            {status === "LIVE" ? "LIVE INTELLIGENCE" : "SEEDED ARCHIVE"}
+            {status === "LIVE_SEARCH"
+              ? "LIVE WEB RECON & INGESTION"
+              : status === "LIVE"
+              ? "LIVE INTELLIGENCE"
+              : "SEEDED ARCHIVE"}
           </span>
 
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold tracking-wider uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">
             <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
             {hasPriorObservation ? "MEMORY: PRIOR RECALLED" : "INITIAL BASELINE ESTABLISHED"}
           </span>
+
+          {exportSuccess && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold tracking-wider uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 animate-in fade-in">
+              ✓ DOCX EXPORT COMPLETE
+            </span>
+          )}
 
           <span className="text-[11px] font-mono text-slate-500 ml-auto hidden sm:inline-block">
             Target Query: &quot;{question}&quot;
@@ -128,6 +239,43 @@ export function IntelligenceDossier({
       </header>
 
       <div className="p-6 sm:p-8 lg:p-10 space-y-14 sm:space-y-16">
+
+        {/* Document Requested Callout Banner */}
+        {isDocRequested && (
+          <div className="bg-indigo-50/90 border border-indigo-200 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in">
+            <div className="flex items-start sm:items-center gap-3">
+              <span className="text-3xl">📄</span>
+              <div className="space-y-0.5">
+                <div className="text-sm font-bold text-indigo-950 font-sans">
+                  Executive Word Document (.docx) Ready for Export
+                </div>
+                <div className="text-xs text-indigo-700 font-mono">
+                  All strategic signals, timeline evidence, and watchpoints have been structured for your document.
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled={isExporting}
+              onClick={handleExportDocx}
+              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-mono font-bold uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer shrink-0"
+            >
+              <span>{isExporting ? "Exporting..." : "Download Word Report (.docx) ↓"}</span>
+            </button>
+          </div>
+        )}
+
+        {/* Agent Activity Execution Log (Collapsible) */}
+        {agentExecution && (
+          <AgentActivity
+            competitor={competitor}
+            files={attachments}
+            isComplete={true}
+            durationMs={agentExecution.durationMs}
+            steps={agentExecution.steps}
+            enableWebSearch={agentExecution.webReconPerformed}
+          />
+        )}
 
         {/* ──────────────────────────────────────────────────────────── */}
         {/* SECTION 2 — EXECUTIVE INTELLIGENCE SUMMARY                  */}

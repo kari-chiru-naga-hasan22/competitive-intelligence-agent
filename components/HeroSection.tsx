@@ -1,6 +1,15 @@
 "use client";
 
-import { useState, useRef, KeyboardEvent } from "react";
+import { useState, useRef, KeyboardEvent, ChangeEvent } from "react";
+import { uploadDocument } from "@/lib/api";
+
+export interface AttachedDoc {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  snippet?: string;
+}
 
 export interface HeroSectionProps {
   competitor: string;
@@ -9,6 +18,11 @@ export interface HeroSectionProps {
   onQuestionChange: (q: string) => void;
   onAnalyze: () => void;
   loading: boolean;
+  attachments?: AttachedDoc[];
+  onAddAttachment?: (file: AttachedDoc) => void;
+  onRemoveAttachment?: (id: string) => void;
+  enableWebSearch?: boolean;
+  onToggleWebSearch?: (enabled: boolean) => void;
 }
 
 const PRESET_COMPETITORS = [
@@ -22,10 +36,10 @@ const PRESET_COMPETITORS = [
 ];
 
 const SUGGESTIONS = [
-  "How is pricing changing?",
-  "What products launched recently?",
-  "How is their messaging evolving?",
-  "What should we watch next?",
+  "Pricing changes",
+  "Product launches",
+  "Messaging & positioning",
+  "What should we watch?",
 ];
 
 const MEMORY_PIPELINE = [
@@ -72,6 +86,12 @@ const MEMORY_PIPELINE = [
   },
 ];
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+
 export function HeroSection({
   competitor,
   onCompetitorChange,
@@ -79,21 +99,54 @@ export function HeroSection({
   onQuestionChange,
   onAnalyze,
   loading,
+  attachments = [],
+  onAddAttachment,
+  onRemoveAttachment,
+  enableWebSearch = false,
+  onToggleWebSearch,
 }: HeroSectionProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [customInput, setCustomInput] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
-  const handleSelect = (name: string, defaultQ: string) => {
-    onCompetitorChange(name);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSelect = (comp: string, defaultQ: string) => {
+    onCompetitorChange(comp);
     onQuestionChange(defaultQ);
     setDropdownOpen(false);
-    setCustomInput("");
   };
 
-  const handleChipClick = (chipText: string) => {
-    onQuestionChange(chipText);
-    textareaRef.current?.focus();
+  const handleApplyCustom = () => {
+    if (!customInput.trim()) return;
+    const clean = customInput.trim();
+    onCompetitorChange(clean);
+    onQuestionChange(`What changed in ${clean}'s strategy and recent product announcements?`);
+    setCustomInput("");
+    setDropdownOpen(false);
+    // If not in pre-seeded list, automatically activate web search option
+    if (onToggleWebSearch && !PRESET_COMPETITORS.some(p => p.name.toLowerCase() === clean.toLowerCase())) {
+      onToggleWebSearch(true);
+    }
+  };
+
+  const handleChipClick = (chip: string) => {
+    let newQ = "";
+    if (chip === "Pricing changes") {
+      newQ = `How has ${competitor}'s pricing and packaging changed over time?`;
+    } else if (chip === "Product launches") {
+      newQ = `What core products or AI features did ${competitor} launch recently?`;
+    } else if (chip === "Messaging & positioning") {
+      newQ = `How has ${competitor} shifted its positioning and market messaging?`;
+    } else {
+      newQ = `What strategic moves should we watch next for ${competitor}?`;
+    }
+    onQuestionChange(newQ);
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -105,31 +158,61 @@ export function HeroSection({
     }
   };
 
-  const handleApplyCustom = () => {
-    const trimmed = customInput.trim();
-    if (!trimmed) return;
-    handleSelect(trimmed, `What changed in ${trimmed}'s strategy?`);
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      try {
+        const result = await uploadDocument(file);
+        if (result.success && result.file && onAddAttachment) {
+          onAddAttachment({
+            id: result.file.id,
+            name: result.file.name,
+            size: result.file.size,
+            type: result.file.type,
+            snippet: result.file.snippet,
+          });
+        } else if (!result.success) {
+          setUploadError(result.error || `Failed to process ${file.name}`);
+        }
+      } catch (err) {
+        setUploadError(err instanceof Error ? err.message : `Upload failed for ${file.name}`);
+      }
+    }
+
+    setIsUploading(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   return (
-    <section className="relative min-h-[660px] sm:min-h-[720px] flex items-center justify-center pt-14 pb-16 sm:pt-16 sm:pb-20 overflow-hidden border-b border-[#DDD8CE]">
-      {/* 🌌 FULL BACKGROUND: Neural Agent Artistically Aligned on the Right */}
-      <div className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden bg-black">
-        <img
-          src="/hero-agent.png"
-          alt="Competitive Intelligence Neural Agent"
-          className="w-full h-full object-cover object-[70%_center] sm:object-center sm:translate-x-[260px] md:translate-x-[320px] lg:translate-x-[380px] opacity-40 sm:opacity-95 transition-transform duration-700"
-        />
+    <section className="relative w-full min-h-[580px] lg:min-h-[640px] flex items-center justify-center overflow-hidden py-14 sm:py-20 select-none">
+      
+      {/* ── BACKGROUND IMAGE LAYER ── */}
+      <div
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat scale-105 filter brightness-[0.70] contrast-[1.15]"
+        style={{
+          backgroundImage: "url('/radar-dish.jpg')",
+          backgroundPosition: "center 40%",
+        }}
+      />
 
-        {/* Directional gradient on left to blend seamlessly with pure black */}
-        <div className="absolute inset-y-0 left-0 w-full sm:w-3/5 bg-gradient-to-r from-black via-black/85 to-transparent"></div>
-        <div className="absolute inset-0 bg-radial-[at_center] from-black/10 via-black/35 to-transparent"></div>
-      </div>
+      {/* ── DEEP EDITORIAL CINEMATIC OVERLAYS ── */}
+      <div className="absolute inset-0 z-1 bg-gradient-to-b from-[#040810]/80 via-transparent to-[#040810]/95" />
+      <div className="absolute inset-0 z-1 bg-black/45 backdrop-blur-[0.5px]" />
+      <div className="absolute inset-0 z-1 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(4,8,16,0.85)_100%)]" />
 
-      <div className="max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
-        {/* ── LEFT FLANK: Dynamic Intelligence Telemetry HUD ── */}
-        <div className="hidden xl:block absolute left-4 2xl:left-12 top-1/2 -translate-y-1/2 z-20 pointer-events-auto">
+      {/* ── MAIN CONTAINER ── */}
+      <div className="relative z-10 w-full max-w-[1240px] mx-auto px-4 sm:px-8">
+
+        {/* ── APPROVED TELEMETRY HUD (RIGHT SIDE) ── */}
+        <div className="hidden xl:block absolute right-4 2xl:right-8 top-1/2 -translate-y-1/2 z-20 pointer-events-auto">
           <div className="relative w-[295px] 2xl:w-[320px] rounded-2xl bg-[#080C14]/90 backdrop-blur-2xl border border-white/15 p-5 shadow-[0_25px_60px_rgba(0,0,0,0.85),0_0_20px_rgba(255,255,255,0.03)] space-y-4">
             
             {/* Top Amber Shimmer Border */}
@@ -236,28 +319,43 @@ export function HeroSection({
           </div>
         </div>
 
-        {/* ── CENTERED HERO HEADER (PRECISE, ICONIC, 100% PURE WHITE) ── */}
+        {/* ── CENTERED HERO HEADER ── */}
         <div className="text-center max-w-2xl mx-auto space-y-2.5">
-          {/* Main Headline: UNDERSTAND THE MARKET. */}
           <h1 className="text-2xl sm:text-4xl lg:text-[44px] font-semibold text-white tracking-[-0.025em] leading-tight uppercase drop-shadow-[0_4px_25px_rgba(0,0,0,0.9)] whitespace-normal sm:whitespace-nowrap">
             UNDERSTAND THE MARKET<span className="inline-block w-2.5 h-2.5 rounded-full bg-[#C6A15B] ml-2 align-baseline mb-0.5 sm:mb-1 shadow-[0_0_8px_#C6A15B]"></span>
           </h1>
 
-          {/* Subtitle / Lead: Track competitor moves with persistent memory. */}
           <p className="text-sm sm:text-[15px] text-white/75 font-normal max-w-md mx-auto leading-relaxed tracking-wide drop-shadow-sm">
             Track competitor moves with persistent memory.
           </p>
         </div>
 
-        {/* ── CENTERED AGENT CHATBOX & CONTROLS (PRECISE, 100% AS IT WAS BEFORE) ── */}
+        {/* ── AGENT WORKSPACE & INPUT INTERFACE ── */}
         <div className="max-w-lg xl:max-w-xl mx-auto mt-7 space-y-3.5">
           
-          {/* 1. Competitor Selection (TARGET) */}
+          {/* 1. Competitor Selection (WHO ARE YOU ANALYZING?) */}
           <div className="space-y-1">
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-between px-1">
               <span className="text-[11px] font-mono font-medium uppercase tracking-[0.22em] text-white/70 drop-shadow-sm">
-                TARGET
+                WHO ARE YOU ANALYZING?
               </span>
+
+              {/* Web Search Reconnaissance Toggle */}
+              {onToggleWebSearch && (
+                <button
+                  type="button"
+                  onClick={() => onToggleWebSearch(!enableWebSearch)}
+                  className={`flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.5 rounded-full border transition-all cursor-pointer ${
+                    enableWebSearch
+                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-bold"
+                      : "bg-white/5 text-white/50 border-white/10 hover:text-white/80"
+                  }`}
+                  title="Search Google, news, and official blogs for unindexed competitor moves and ingest to memory"
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${enableWebSearch ? "bg-emerald-400 animate-pulse" : "bg-white/40"}`}></span>
+                  <span>{enableWebSearch ? "WEB RECON ACTIVE" : "+ Web Recon"}</span>
+                </button>
+              )}
             </div>
 
             <div className="relative">
@@ -283,7 +381,14 @@ export function HeroSection({
                       />
                     </svg>
                   </div>
-                  <span className="text-white font-medium text-sm sm:text-base">{competitor}</span>
+                  <div className="flex flex-col">
+                    <span className="text-white font-medium text-sm sm:text-base leading-tight">{competitor}</span>
+                    {enableWebSearch && (
+                      <span className="text-[10px] font-mono text-emerald-400 leading-none mt-0.5">
+                        Will search Google & web for real-time moves
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -293,7 +398,7 @@ export function HeroSection({
                 </div>
               </button>
 
-              {/* Dropdown Options (Preset + Custom Company Support) */}
+              {/* Dropdown Options */}
               {dropdownOpen && (
                 <>
                   <div
@@ -321,10 +426,10 @@ export function HeroSection({
                       ))}
                     </div>
 
-                    {/* Custom Company Input */}
+                    {/* Custom Company Input with Web Recon */}
                     <div className="p-3 bg-white/[0.04] space-y-2">
                       <div className="text-[10px] font-mono uppercase text-white/60 font-semibold tracking-wider">
-                        + Enter Custom Company:
+                        + Analyze Any Company (Google / Web Search & Ingest):
                       </div>
                       <div className="flex items-center gap-2">
                         <input
@@ -337,7 +442,7 @@ export function HeroSection({
                               handleApplyCustom();
                             }
                           }}
-                          placeholder="E.g. Stripe, Datadog..."
+                          placeholder="E.g. Stripe, Datadog, Figma, Snowflake..."
                           className="flex-1 px-3 py-1.5 rounded-lg bg-black/60 border border-white/20 text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-white/60 font-sans"
                         />
                         <button
@@ -356,15 +461,17 @@ export function HeroSection({
             </div>
           </div>
 
-          {/* 2. Chat / Question Interface (ASK) */}
+          {/* 2. Chat / Question Interface (ASK YOUR INTELLIGENCE AGENT) */}
           <div className="space-y-1">
             <div className="flex items-center justify-center gap-2">
               <span className="text-[11px] font-mono font-medium uppercase tracking-[0.22em] text-white/70 drop-shadow-sm">
-                ASK
+                ASK YOUR INTELLIGENCE AGENT
               </span>
             </div>
 
             <div className="bg-black/65 backdrop-blur-2xl rounded-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.7)] p-4 sm:p-5 focus-within:border-white/50 focus-within:ring-2 focus-within:ring-white/15 transition-all">
+              
+              {/* Question Textarea */}
               <div className="flex items-start gap-3">
                 <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-white shrink-0 mt-0.5">
                   <svg
@@ -389,13 +496,74 @@ export function HeroSection({
                   value={question}
                   onChange={(e) => onQuestionChange(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={`What changed in ${competitor}'s strategy?`}
+                  placeholder={`How has ${competitor}'s strategy changed over the last 90 days?`}
                   className="w-full text-sm sm:text-base text-white placeholder:text-white/40 focus:outline-none resize-none bg-transparent font-sans font-normal leading-relaxed tracking-wide"
                 />
               </div>
 
+              {/* Uploaded File Chips Preview */}
+              {attachments.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-white/10 space-y-1.5">
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-white/50">
+                    ATTACHED EVIDENCE ({attachments.length}):
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {attachments.map((file) => (
+                      <div
+                        key={file.id}
+                        className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-white text-xs font-mono"
+                      >
+                        <span className="text-[11px]">📄</span>
+                        <span className="truncate max-w-[160px] font-medium">{file.name}</span>
+                        <span className="text-[10px] text-white/50">({formatBytes(file.size)})</span>
+                        {onRemoveAttachment && (
+                          <button
+                            type="button"
+                            onClick={() => onRemoveAttachment(file.id)}
+                            className="text-white/60 hover:text-white transition-colors cursor-pointer ml-0.5"
+                            title="Remove attachment"
+                          >
+                            &times;
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Upload Error Alert */}
+              {uploadError && (
+                <div className="mt-2 text-[11px] font-mono text-rose-300 bg-rose-950/50 border border-rose-800/60 rounded px-2.5 py-1">
+                  {uploadError}
+                </div>
+              )}
+
               {/* Bottom Action Bar */}
-              <div className="flex items-center justify-end pt-3 border-t border-white/15 mt-2">
+              <div className="flex items-center justify-between pt-3 border-t border-white/15 mt-3">
+                {/* File Attachment Trigger */}
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".pdf,.docx,.txt,.csv,.md,.json"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    disabled={loading || isUploading}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/20 bg-white/5 hover:bg-white/15 text-white/80 hover:text-white text-xs font-mono transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <span>📎</span>
+                    <span>{isUploading ? "Uploading..." : "Add files"}</span>
+                    <span className="text-[10px] text-white/40 font-mono hidden sm:inline">(PDF, DOCX, CSV)</span>
+                  </button>
+                </div>
+
+                {/* Analyze Button */}
                 <button
                   type="button"
                   disabled={loading || !question.trim()}
@@ -426,10 +594,10 @@ export function HeroSection({
             </div>
           </div>
 
-          {/* 3. Example Questions (SUGGESTIONS) */}
+          {/* 3. Example Questions (TRY ASKING) */}
           <div className="space-y-1.5 pt-1 text-center">
             <span className="block text-[11px] font-mono font-medium uppercase tracking-[0.22em] text-white/70 drop-shadow-sm">
-              SUGGESTIONS
+              TRY ASKING
             </span>
 
             <div className="flex flex-wrap items-center justify-center gap-2">
@@ -440,7 +608,7 @@ export function HeroSection({
                   onClick={() => handleChipClick(chip)}
                   className="text-xs font-mono font-normal sm:font-medium px-4 py-1.5 rounded-full border border-white/15 bg-white/[0.04] hover:bg-white hover:text-black hover:border-white text-white/85 transition-all cursor-pointer shadow-xs"
                 >
-                  {chip}
+                  [ {chip} ]
                 </button>
               ))}
             </div>
@@ -451,4 +619,3 @@ export function HeroSection({
     </section>
   );
 }
-

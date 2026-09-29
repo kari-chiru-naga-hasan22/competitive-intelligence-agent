@@ -5,6 +5,9 @@ import {
   buildObservationMemoryContent,
   isHindsightConfigured,
 } from "@/lib/hindsight";
+import { getFile } from "@/lib/fileStore";
+import { conductWebResearchAndIngest, getCachedWebEvidence } from "@/lib/webResearch";
+import { computeSignalBreakdown, computeTrajectorySeries, computeStrategicMomentum } from "@/lib/reportAnalytics";
 
 const BANK_ID = "competitive-intelligence";
 
@@ -24,6 +27,14 @@ export type PriorObservation = {
   signal: string;
   summary: string;
 };
+
+export interface AttachmentInput {
+  id?: string;
+  name: string;
+  size?: number;
+  type?: string;
+  content?: string;
+}
 
 function normalizeText(str: string): string {
   return str
@@ -115,10 +126,19 @@ interface RawMemoryItem {
 }
 
 export async function POST(request: Request) {
+  const startTime = Date.now();
+  const executionSteps: string[] = [];
+
   try {
     // 1. Validate Input & Security
     const body = await request.json().catch(() => ({}));
-    const { competitor, question } = body;
+    const {
+      competitor,
+      question,
+      attachments = [],
+      fileIds = [],
+      enableWebSearch = false,
+    } = body;
 
     if (!competitor || typeof competitor !== "string" || !competitor.trim()) {
       return NextResponse.json(
@@ -136,50 +156,79 @@ export async function POST(request: Request) {
 
     const cleanCompetitor = competitor.trim().slice(0, MAX_COMPETITOR_LEN);
     const cleanQuestion = question.trim().slice(0, MAX_QUESTION_LEN);
+    executionSteps.push(`Identified competitor: ${cleanCompetitor}`);
 
-    // 2. Check Service Configurations
-    if (!isHindsightConfigured()) {
-      console.warn("[intelligence] HINDSIGHT_API_KEY is not configured.");
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Hindsight memory engine is not configured. Set HINDSIGHT_API_KEY in .env.local to enable live recall.",
-          code: "HINDSIGHT_UNAVAILABLE",
-        },
-        { status: 503 }
+    // Process attached documents
+    const processedAttachments: Array<{ name: string; text: string }> = [];
+    if (Array.isArray(fileIds) && fileIds.length > 0) {
+      for (const fId of fileIds) {
+        const fileRef = getFile(fId);
+        if (fileRef) {
+          processedAttachments.push({ name: fileRef.name, text: fileRef.text });
+        }
+      }
+    }
+
+    if (Array.isArray(attachments)) {
+      for (const att of attachments) {
+        if (att.content && !processedAttachments.some(p => p.name === att.name)) {
+          processedAttachments.push({ name: att.name, text: att.content });
+        } else if (att.id) {
+          const fileRef = getFile(att.id);
+          if (fileRef && !processedAttachments.some(p => p.name === fileRef.name)) {
+            processedAttachments.push({ name: fileRef.name, text: fileRef.text });
+          }
+        }
+      }
+    }
+
+    if (processedAttachments.length > 0) {
+      executionSteps.push(
+        `Processed ${processedAttachments.length} attached document(s): ${processedAttachments.map(p => p.name).join(", ")}`
       );
     }
 
-    const hindsight = getHindsightClient();
+    // 2. Check Service Configurations
+    const hindsightReady = isHindsightConfigured();
+    let rawMemories: RawMemoryItem[] = [];
 
-    // 3. Multi-Query Temporal Recall from Hindsight
-    console.log(`[intelligence] Recalling memory for: "${cleanCompetitor}" query: "${cleanQuestion}"`);
+    if (hindsightReady) {
+      const hindsight = getHindsightClient();
+      console.log(`[intelligence] Recalling memory for: "${cleanCompetitor}" query: "${cleanQuestion}"`);
 
-    const [eventRecall, observationRecall] = await Promise.all([
-      hindsight.recall(
-        BANK_ID,
-        `${cleanCompetitor}: ${cleanQuestion} pricing product launch packaging strategy`,
-        { maxTokens: 2000, budget: "low" }
-      ).catch((err) => {
-        console.error("[intelligence] Event recall failed:", err);
-        return { results: [] };
-      }),
-      hindsight.recall(
-        BANK_ID,
-        `${cleanCompetitor}: strategic observation previous analysis history trajectory`,
-        { maxTokens: 1200, budget: "low" }
-      ).catch((err) => {
-        console.error("[intelligence] Observation recall failed:", err);
-        return { results: [] };
-      }),
-    ]);
+      try {
+        const [eventRecall, observationRecall] = await Promise.all([
+          hindsight.recall(
+            BANK_ID,
+            `${cleanCompetitor}: ${cleanQuestion} pricing product launch packaging strategy`,
+            { maxTokens: 2000, budget: "low" }
+          ).catch((err) => {
+            console.error("[intelligence] Event recall failed:", err);
+            return { results: [] };
+          }),
+          hindsight.recall(
+            BANK_ID,
+            `${cleanCompetitor}: strategic observation previous analysis history trajectory`,
+            { maxTokens: 1200, budget: "low" }
+          ).catch((err) => {
+            console.error("[intelligence] Observation recall failed:", err);
+            return { results: [] };
+          }),
+        ]);
 
-    const rawMemories: RawMemoryItem[] = [
-      ...(eventRecall.results || []),
-      ...(observationRecall.results || []),
-    ];
+        rawMemories = [
+          ...(eventRecall.results || []),
+          ...(observationRecall.results || []),
+        ];
+        executionSteps.push(`Recalled ${rawMemories.length} memory records from Hindsight`);
+      } catch (recallErr) {
+        console.warn("[intelligence] Hindsight memory recall exception:", recallErr);
+      }
+    } else {
+      console.warn("[intelligence] HINDSIGHT_API_KEY is not configured, checking local cache & web reconnaissance.");
+    }
 
-    // 4. Memory Isolation & Deduplication
+    // 3. Memory Isolation & Deduplication
     const uniqueMemoryTexts = new Set<string>();
     const competitorMemories = rawMemories.filter((mem) => {
       const text = mem.text?.trim();
@@ -191,7 +240,7 @@ export async function POST(request: Request) {
       return true;
     });
 
-    // 5. Partition into Factual Evidence vs Prior Strategic Observations
+    // 4. Partition into Factual Evidence vs Prior Strategic Observations
     const evidenceList: Evidence[] = [];
     const priorObservations: PriorObservation[] = [];
 
@@ -273,42 +322,98 @@ export async function POST(request: Request) {
       }
     }
 
+    // Also merge any runtime cached web evidence for this company
+    const cachedWebEvents = getCachedWebEvidence(cleanCompetitor);
+    for (const we of cachedWebEvents) {
+      if (!evidenceList.some(e => e.date === we.date && getTextSimilarity(e.event, we.event) >= 0.65)) {
+        evidenceList.push(we);
+      }
+    }
+
+    // 5. LIVE WEB RESEARCH & INGESTION FOR UNDEFINED OR EMPTY COMPANIES
+    let webReconPerformed = false;
+    let webSourceSummary = "";
+
+    if (evidenceList.length === 0 || enableWebSearch) {
+      console.log(`[intelligence] Launching live web search reconnaissance for ${cleanCompetitor}...`);
+      executionSteps.push(`Conducting live web reconnaissance across public domain for "${cleanCompetitor}"`);
+
+      try {
+        const webResearch = await conductWebResearchAndIngest(cleanCompetitor, cleanQuestion);
+        if (webResearch.events.length > 0) {
+          webReconPerformed = true;
+          webSourceSummary = webResearch.sourceSummary;
+          for (const we of webResearch.events) {
+            if (!evidenceList.some(e => e.date === we.date && getTextSimilarity(e.event, we.event) >= 0.65)) {
+              evidenceList.push(we);
+            }
+          }
+          executionSteps.push(
+            `Discovered ${webResearch.events.length} real-world events from public sources${
+              webResearch.ingestedToHindsight ? " & retained into Hindsight memory" : ""
+            }`
+          );
+        }
+      } catch (searchErr) {
+        console.warn(`[intelligence] Web search reconnaissance encountered error:`, searchErr);
+      }
+    }
+
     // Sort chronologically
     const datedEvidence = evidenceList
       .filter((e) => e.date !== "date unknown")
       .sort((a, b) => a.date.localeCompare(b.date));
     const undatedEvidence = evidenceList.filter((e) => e.date === "date unknown");
-    const evidence = [...datedEvidence, ...undatedEvidence].slice(0, 12);
+    const evidence = [...datedEvidence, ...undatedEvidence].slice(0, 16);
 
-    // 6. Handle Zero Evidence (Phase 9 requirement)
-    if (evidence.length === 0) {
+    // 6. Handle Zero Evidence & No Attachments
+    if (evidence.length === 0 && processedAttachments.length === 0) {
       return NextResponse.json({
         success: true,
         status: "NO_EVIDENCE",
         competitor: cleanCompetitor,
         question: cleanQuestion,
         insight: {
-          summary: `No company-specific historical evidence is currently stored for ${cleanCompetitor}.`,
+          summary: `No public or historical evidence could be established for ${cleanCompetitor}.`,
           observed_changes: [],
-          strategic_signal: `Insufficient historical baseline to infer ${cleanCompetitor}'s strategy.`,
+          strategic_signal: `Insufficient data baseline to infer ${cleanCompetitor}'s strategy.`,
           watch_next: [
-            `Add events for ${cleanCompetitor} using the '+ Add Event' modal to establish persistent memory.`,
-            `Monitor public product announcements and pricing pages for initial baseline data.`,
+            `Attach relevant competitor PDFs, DOCX, or CSV files using the '📎 Add files' button.`,
+            `Use the '+ Add Event' modal to manually log known company milestones.`,
+            `Verify the company name spelling or target their parent organization.`,
           ],
           confidence: 0,
         },
         evidence: [],
         hasPriorObservation: false,
+        agentExecution: {
+          steps: executionSteps,
+          durationMs: Date.now() - startTime,
+        },
       });
     }
 
-    // 7. Format Context for Gemini (incorporating Prior Knowledge from Hindsight!)
-    const evidenceContext = evidence
-      .map(
-        (item, index) =>
-          `[Event ${index + 1}] Date: ${item.date} | Category: ${item.category} | Source: ${item.source || "Web"}\nFact: ${item.event}`
-      )
-      .join("\n\n");
+    // 7. Format Context for Gemini (incorporating Evidence, Attachments, & Prior Observations)
+    const evidenceContext =
+      evidence.length > 0
+        ? evidence
+            .map(
+              (item, index) =>
+                `[Event ${index + 1}] Date: ${item.date} | Category: ${item.category} | Source: ${item.source || "Web"}\nFact: ${item.event}`
+            )
+            .join("\n\n")
+        : "No chronological event log on file (Relying on attached documentation).";
+
+    const attachmentsContext =
+      processedAttachments.length > 0
+        ? `\n\nATTACHED USER DOCUMENTS / EVIDENCE (${processedAttachments.length} document${processedAttachments.length > 1 ? "s" : ""}):\n` +
+          processedAttachments
+            .map(
+              (att, idx) =>
+                `--- ATTACHMENT ${idx + 1}: ${att.name} ---\n${att.text.slice(0, 8000)}\n--- END ATTACHMENT ${idx + 1} ---`
+            )
+            .join("\n\n")
+        : "";
 
     const priorKnowledgeContext =
       priorObservations.length > 0
@@ -325,10 +430,12 @@ Prior Summary: ${obs.summary}`
   .join("\n\n")}`
         : "\n\nPREVIOUS STRATEGIC OBSERVATIONS: None on file (Initial baseline analysis).";
 
+    executionSteps.push(`Synthesizing strategic trajectory & inference with Gemini`);
+
     // 8. Synthesize with Gemini
     const prompt = `You are a Principal Competitive Intelligence Analyst.
 
-Analyze the accumulated chronological competitor intelligence below.
+Analyze the accumulated competitor intelligence and attached documents below.
 
 TARGET COMPANY:
 ${cleanCompetitor}
@@ -336,8 +443,9 @@ ${cleanCompetitor}
 USER INTELLIGENCE QUESTION:
 ${cleanQuestion}
 
-HISTORICAL EVIDENCE LOG (Factual Grounding):
+HISTORICAL EVIDENCE LOG:
 ${evidenceContext}
+${attachmentsContext}
 ${priorKnowledgeContext}
 
 Analyze the trajectory and return ONLY a valid JSON object matching this exact schema:
@@ -357,10 +465,11 @@ Analyze the trajectory and return ONLY a valid JSON object matching this exact s
 }
 
 CRITICAL RULES:
-1. Ground observed_changes EXCLUSIVELY in the provided evidence. Never fabricate dates, pricing, or product names.
+1. Ground observed_changes EXCLUSIVELY in the provided evidence and attachments. Never fabricate dates or pricing.
 2. strategic_signal MUST be an analytical inference, clearly distinguished from observed facts.
-3. If previous strategic observations are provided, EXPLICITLY reference how the newest evidence confirms, shifts, or evolves that prior baseline trajectory.
-4. Calculate a realistic confidence score (0-100) based on evidence density and clarity.`;
+3. If attachments are provided, integrate their specific insights into the synthesis.
+4. If previous strategic observations are provided, EXPLICITLY reference how newest moves evolve that baseline.
+5. Calculate a realistic confidence score (0-100) based on evidence density and clarity.`;
 
     let insight;
     try {
@@ -388,35 +497,64 @@ CRITICAL RULES:
       );
     }
 
+    executionSteps.push(`Generated decision-ready intelligence dossier and visualizations`);
+
     // Ensure safe defaults
     const confidenceScore =
       typeof insight.confidence === "number" && insight.confidence > 0
         ? insight.confidence
-        : Math.min(95, 50 + evidence.length * 8);
+        : Math.min(95, 50 + evidence.length * 7 + processedAttachments.length * 10);
 
-    // 9. COMPLETE THE FEEDBACK LOOP: RETAIN THE GENERATED OBSERVATION (Phase 6 requirement)
-    try {
-      const observationMemory = buildObservationMemoryContent({
-        competitor: cleanCompetitor,
-        question: cleanQuestion,
-        summary: insight.summary,
-        strategicSignal: insight.strategic_signal,
-        observedChanges: insight.observed_changes || [],
-      });
+    // 9. COMPLETE THE FEEDBACK LOOP: RETAIN THE GENERATED OBSERVATION (if Hindsight is configured)
+    if (hindsightReady) {
+      try {
+        const hindsight = getHindsightClient();
+        const observationMemory = buildObservationMemoryContent({
+          competitor: cleanCompetitor,
+          question: cleanQuestion,
+          summary: insight.summary,
+          strategicSignal: insight.strategic_signal,
+          observedChanges: insight.observed_changes || [],
+        });
 
-      await hindsight.retain(BANK_ID, observationMemory, {
-        context: "competitive-intelligence-observation",
-        timestamp: new Date(),
-      });
-      console.log(`[intelligence] Successfully retained strategic observation for ${cleanCompetitor} in Hindsight.`);
-    } catch (retainErr) {
-      console.warn("[intelligence] Non-critical: Failed to retain observation in Hindsight:", retainErr);
+        await hindsight.retain(BANK_ID, observationMemory, {
+          context: "competitive-intelligence-observation",
+          timestamp: new Date(),
+        });
+        console.log(`[intelligence] Successfully retained strategic observation for ${cleanCompetitor} in Hindsight.`);
+      } catch (retainErr) {
+        console.warn("[intelligence] Non-critical: Failed to retain observation in Hindsight:", retainErr);
+      }
     }
 
-    // 10. Return clean live intelligence
+    // 10. Compute Structured Chart Payloads
+    const breakdown = computeSignalBreakdown(evidence);
+    const trajectory = computeTrajectorySeries(evidence);
+    const momentum = computeStrategicMomentum(evidence);
+
+    const charts = [
+      {
+        type: "trajectory",
+        title: "Strategic Trajectory Over Time",
+        data: trajectory.points,
+        hasEnoughData: trajectory.hasEnoughData,
+      },
+      {
+        type: "category_breakdown",
+        title: "Category Signal Distribution",
+        data: breakdown,
+      },
+      {
+        type: "momentum",
+        title: "Strategic Momentum Dimensions",
+        data: momentum,
+      },
+    ];
+
+    // 11. Return clean live intelligence with charts and agent execution metadata
     return NextResponse.json({
       success: true,
-      status: "LIVE",
+      status: webReconPerformed ? "LIVE_SEARCH" : "LIVE",
       competitor: cleanCompetitor,
       question: cleanQuestion,
       insight: {
@@ -427,8 +565,16 @@ CRITICAL RULES:
         confidence: confidenceScore,
       },
       evidence,
+      charts,
       hasPriorObservation: priorObservations.length > 0,
       priorObservationCount: priorObservations.length,
+      attachments: processedAttachments.map(p => ({ name: p.name })),
+      agentExecution: {
+        steps: executionSteps,
+        durationMs: Date.now() - startTime,
+        webReconPerformed,
+        webSourceSummary,
+      },
     });
   } catch (error) {
     console.error("[intelligence] Unexpected error in intelligence route:", error);

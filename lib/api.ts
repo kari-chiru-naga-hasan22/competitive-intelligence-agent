@@ -13,7 +13,7 @@ export interface IntelligenceInsight {
   confidence?: number;
 }
 
-export type IntelligenceStatus = "LIVE" | "SEEDED" | "NO_EVIDENCE" | "ERROR";
+export type IntelligenceStatus = "LIVE" | "LIVE_SEARCH" | "SEEDED" | "NO_EVIDENCE" | "ERROR";
 
 export interface IntelligenceResponse {
   success: boolean;
@@ -24,6 +24,14 @@ export interface IntelligenceResponse {
   evidence: IntelligenceEvidence[];
   hasPriorObservation?: boolean;
   priorObservationCount?: number;
+  charts?: any[];
+  attachments?: Array<{ name: string }>;
+  agentExecution?: {
+    steps: string[];
+    durationMs: number;
+    webReconPerformed?: boolean;
+    webSourceSummary?: string;
+  };
   error?: string;
   code?: string;
 }
@@ -236,6 +244,89 @@ export const SEEDED_ARCHIVES: Record<string, IntelligenceResponse> = {
   }
 };
 
+export interface AnalyzeOptions {
+  forceSeededArchive?: boolean;
+  attachments?: Array<{ id?: string; name: string; content?: string }>;
+  fileIds?: string[];
+  enableWebSearch?: boolean;
+}
+
+/**
+ * Upload document attachment to the agent
+ */
+export async function uploadDocument(file: File): Promise<{
+  success: boolean;
+  file?: {
+    id: string;
+    name: string;
+    size: number;
+    type: string;
+    snippet: string;
+    charCount: number;
+  };
+  error?: string;
+}> {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error("[api] Document upload error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to upload document",
+    };
+  }
+}
+
+/**
+ * Download DOCX report directly from the current intelligence response
+ */
+export async function downloadDocxReport(response: IntelligenceResponse): Promise<void> {
+  try {
+    const res = await fetch("/api/export/docx", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        competitor: response.competitor,
+        question: response.question,
+        summary: response.insight.summary,
+        strategicSignal: response.insight.strategic_signal,
+        observedChanges: response.insight.observed_changes || [],
+        watchNext: response.insight.watch_next || [],
+        evidence: response.evidence || [],
+        status: response.status,
+        confidence: response.insight.confidence,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Export failed with status ${res.status}`);
+    }
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const safeName = response.competitor.replace(/[^\w-]/g, "_").toLowerCase();
+    link.download = `${safeName}_intelligence_report.docx`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error("[api] Failed to export DOCX report:", err);
+    throw err;
+  }
+}
+
 /**
  * Perform competitive analysis.
  * NEVER silently substitutes mock data as live intelligence (Phase 3 requirement).
@@ -243,7 +334,7 @@ export const SEEDED_ARCHIVES: Record<string, IntelligenceResponse> = {
 export async function analyzeCompetitor(
   competitor: string,
   question: string,
-  options?: { forceSeededArchive?: boolean }
+  options?: AnalyzeOptions
 ): Promise<IntelligenceResponse> {
   // If user explicitly requests to load the pre-seeded benchmark archive
   if (options?.forceSeededArchive && SEEDED_ARCHIVES[competitor]) {
@@ -260,7 +351,13 @@ export async function analyzeCompetitor(
     const res = await fetch("/api/intelligence", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ competitor, question }),
+      body: JSON.stringify({
+        competitor,
+        question,
+        attachments: options?.attachments,
+        fileIds: options?.fileIds,
+        enableWebSearch: options?.enableWebSearch,
+      }),
     });
 
     const data = await res.json();
